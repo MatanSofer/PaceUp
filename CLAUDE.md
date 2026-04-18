@@ -12,9 +12,39 @@ Before touching any code, read ALL of the following in order:
 8. .claude/skills/android-compose-ui/SKILL.md
 9. .claude/skills/ui-design/SKILL.md
 10. docs/SPEC.md
+11. docs/IMPLEMENTATION_PLAN.md
 
 These define ALL architecture, patterns, naming, and conventions.
 Never deviate from them unless this file explicitly overrides.
+
+---
+## Implementation plan & task tracking
+
+The full implementation plan is at docs/IMPLEMENTATION_PLAN.md.
+It contains every feature in the correct build order, grouped by phase.
+
+### Rules — follow these every session:
+
+1. At the start of every session, read IMPLEMENTATION_PLAN.md and
+   identify the current task.
+
+2. Before implementing any task, read the spec section referenced
+   in that task. Never guess what a feature should do — check the
+   spec first.
+
+3. When a task is fully complete, update IMPLEMENTATION_PLAN.md:
+    - Change `- [ ] Done` to `- [x] Done`
+    - Add a one-line note below if any important decision was made
+
+4. Never mark a task complete if:
+    - It does not compile on Android
+    - Tests are missing (if the task requires them)
+    - The iOS expect/actual counterpart is not implemented
+    - Any critical rule from this file was broken
+
+5. After marking complete, state:
+   "Task [ID] complete. Moving to task [next ID]."
+   before doing anything else.
 
 ---
 
