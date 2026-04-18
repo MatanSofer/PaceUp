@@ -29,3 +29,18 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
+include(":androidApp")
+
+include(":shared:auth")
+include(":shared:supabase")
+include(":shared:realtime")
+include(":shared:activities")
+include(":shared:paceZone")
+include(":shared:runMatching")
+include(":shared:rivalEngine")
+include(":shared:reputationEngine")
+include(":shared:notifications")
+include(":shared:database")
+include(":shared:network")
+include(":shared:deeplink")
+include(":shared:i18n")
