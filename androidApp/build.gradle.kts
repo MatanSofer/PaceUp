@@ -17,6 +17,7 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(project(":composeApp"))
+            implementation(project(":shared:network"))
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
             implementation(libs.androidx.core.ktx)
@@ -44,6 +45,9 @@ android {
         getByName("release") {
             isMinifyEnabled = false
         }
+    }
+    buildFeatures {
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
