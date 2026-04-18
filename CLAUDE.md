@@ -186,6 +186,29 @@ Motion:
 - Example: fix(runMatching): correct pace zone filter logic
 - Claude Code: always suggest a commit message after completing a task
 
+### Git Branching Strategy
+- Never commit directly to `main` or `dev` — always use a feature branch
+- Branch naming:
+    - Features: `feat/short-description` (e.g. `feat/strava-oauth`)
+    - Fixes: `fix/short-description` (e.g. `fix/pace-zone-filter`)
+    - Refactors: `refactor/short-description`
+- After completing any task, always suggest the full git flow:
+    1. `git checkout -b feat/your-feature` (if not already on a branch)
+    2. `git add .`
+    3. `git commit -m "type(scope): description"`
+    4. `git push origin feat/your-feature`
+- Never merge branches — that is the developer's decision
+- Always remind which branch you're on at the start of a new task
+
+### Branch Hierarchy
+- `main` — production only, merged from dev when explicitly instructed
+- `dev` — integration branch, merged from feature branches when developer approves
+- Feature branches are deleted after merging into dev
+
+### Rules
+- If no branch exists yet for the current task, create one before writing any code
+- Always state the current branch at the start of each session
+- When a task is done, suggest: "Ready to merge into dev when you approve"
 
 ### Performance
 - No network calls on the main thread — always Dispatchers.IO
