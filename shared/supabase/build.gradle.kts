@@ -15,6 +15,18 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.supabase.auth)
+            implementation(libs.supabase.postgrest)
+            implementation(libs.supabase.realtime)
+            implementation(libs.supabase.storage)
+            implementation(libs.koin.core)
+            implementation(project(":shared:network"))
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.android)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

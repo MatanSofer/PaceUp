@@ -102,10 +102,10 @@ koin-compose           = { module = "io.insert-koin:koin-compose",           ver
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin-compose" }
 
 # Supabase
-supabase-auth      = { module = "io.github.jan-tennermann:supabase-auth-kt",      version.ref = "supabase" }
-supabase-postgrest = { module = "io.github.jan-tennermann:supabase-postgrest-kt", version.ref = "supabase" }
-supabase-realtime  = { module = "io.github.jan-tennermann:supabase-realtime-kt",  version.ref = "supabase" }
-supabase-storage   = { module = "io.github.jan-tennermann:supabase-storage-kt",   version.ref = "supabase" }
+supabase-auth      = { module = "io.github.jan-tennert.supabase:auth-kt",      version.ref = "supabase" }
+supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
+supabase-realtime  = { module = "io.github.jan-tennert.supabase:realtime-kt",  version.ref = "supabase" }
+supabase-storage   = { module = "io.github.jan-tennert.supabase:storage-kt",   version.ref = "supabase" }
 
 # Coil
 coil-compose  = { module = "io.coil-kt.coil3:coil-compose",       version.ref = "coil" }
