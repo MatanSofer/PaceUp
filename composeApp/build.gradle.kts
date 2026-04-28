@@ -41,8 +41,10 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
             implementation(project(":shared:supabase"))
             implementation(project(":shared:database"))
+            implementation(project(":shared:auth"))
             implementation(libs.compose.navigation)
             implementation(libs.kotlinx.serialization.json)
         }

@@ -15,6 +15,9 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.koin.core)
+            implementation(libs.supabase.auth)
+            implementation(project(":shared:network"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -10,11 +10,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.paceup.feature.welcome.WelcomeRoot
 
 /** Registers all PaceUp destinations. Stub screens replaced per feature task. */
 fun NavGraphBuilder.appGraph(navController: NavController) {
     composable<WelcomeRoute> {
-        StubScreen("Welcome") { navController.navigate(LoginRoute) }
+        WelcomeRoot(onNavigateToLogin = { navController.navigate(LoginRoute) })
     }
     composable<LoginRoute> {
         StubScreen("Login") { navController.navigate(SignUpRoute) }
