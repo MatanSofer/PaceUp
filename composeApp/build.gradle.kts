@@ -42,6 +42,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(project(":shared:supabase"))
+            implementation(project(":shared:database"))
             implementation(libs.compose.navigation)
             implementation(libs.kotlinx.serialization.json)
         }

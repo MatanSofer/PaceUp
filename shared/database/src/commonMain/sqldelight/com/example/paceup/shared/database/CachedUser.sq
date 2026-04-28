@@ -1,0 +1,24 @@
+CREATE TABLE CachedUser (
+    id TEXT NOT NULL PRIMARY KEY,
+    display_name TEXT NOT NULL,
+    avatar_url TEXT,
+    bio TEXT,
+    pace_zone TEXT,
+    avg_pace_seconds INTEGER,
+    weekly_mileage_avg REAL,
+    show_up_rate REAL,
+    reputation_tier TEXT NOT NULL,
+    strava_connected INTEGER NOT NULL,
+    is_verified INTEGER NOT NULL,
+    city TEXT,
+    cached_at INTEGER NOT NULL
+);
+
+upsert:
+INSERT OR REPLACE INTO CachedUser VALUES ?;
+
+selectAll:
+SELECT * FROM CachedUser;
+
+deleteAll:
+DELETE FROM CachedUser;

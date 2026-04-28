@@ -2,6 +2,7 @@ package com.paceup.android
 
 import android.app.Application
 import com.example.paceup.di.sharedModules
+import com.example.paceup.shared.database.androidDatabaseModule
 import com.example.paceup.shared.network.logger.AppLogger
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -15,7 +16,7 @@ class PaceUpApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@PaceUpApplication)
-            modules(sharedModules)
+            modules(sharedModules + androidDatabaseModule)
         }
     }
 }
