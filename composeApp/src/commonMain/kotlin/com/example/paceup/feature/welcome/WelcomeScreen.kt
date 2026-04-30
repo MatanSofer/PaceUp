@@ -1,28 +1,36 @@
 package com.example.paceup.feature.welcome
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,12 +61,50 @@ fun WelcomeScreen(
     state: WelcomeState,
     onAction: (WelcomeAction) -> Unit
 ) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    val gridAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 800, delayMillis = 100),
+        label = "gridAlpha"
+    )
+    val wordmarkAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 0),
+        label = "wordmarkAlpha"
+    )
+    val wordmarkSlide by animateFloatAsState(
+        targetValue = if (visible) 0f else 24f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 0),
+        label = "wordmarkSlide"
+    )
+    val taglineAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 150),
+        label = "taglineAlpha"
+    )
+    val taglineSlide by animateFloatAsState(
+        targetValue = if (visible) 0f else 20f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 150),
+        label = "taglineSlide"
+    )
+    val buttonAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 300),
+        label = "buttonAlpha"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0D1B2A))
     ) {
-        PaceNumberGrid(modifier = Modifier.fillMaxSize())
+        PaceNumberGrid(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = gridAlpha }
+        )
 
         Column(
             modifier = Modifier
@@ -78,7 +124,11 @@ fun WelcomeScreen(
                     color = Color.White,
                     fontSize = 56.sp,
                     fontWeight = FontWeight.Black,
-                    letterSpacing = (-2).sp
+                    letterSpacing = (-2).sp,
+                    modifier = Modifier.graphicsLayer {
+                        alpha = wordmarkAlpha
+                        translationY = wordmarkSlide
+                    }
                 )
                 Text(
                     text = "Find your pace. Find your people.",
@@ -86,7 +136,11 @@ fun WelcomeScreen(
                     fontSize = 16.sp,
                     fontStyle = FontStyle.Italic,
                     textAlign = TextAlign.Center,
-                    lineHeight = 24.sp
+                    lineHeight = 24.sp,
+                    modifier = Modifier.graphicsLayer {
+                        alpha = taglineAlpha
+                        translationY = taglineSlide
+                    }
                 )
             }
 
@@ -96,7 +150,18 @@ fun WelcomeScreen(
                 onClick = { onAction(WelcomeAction.OnGetStartedClick) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(56.dp)
+                    .graphicsLayer { alpha = buttonAlpha }
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF4FC3F7).copy(alpha = 0.5f),
+                                Color(0xFF1A73E8).copy(alpha = 0.2f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    ),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1A73E8)
