@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -26,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -38,7 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.paceup.ui.ObserveAsEvents
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import paceup.composeapp.generated.resources.Res
+import paceup.composeapp.generated.resources.ic_paceup_mark
 
 @Composable
 fun WelcomeRoot(
@@ -119,6 +124,16 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                Image(
+                    painter = painterResource(Res.drawable.ic_paceup_mark),
+                    contentDescription = "PaceUp logo",
+                    modifier = Modifier
+                        .size(72.dp)
+                        .graphicsLayer {
+                            alpha = wordmarkAlpha
+                            translationY = wordmarkSlide
+                        }
+                )
                 Text(
                     text = "PaceUp",
                     color = Color.White,

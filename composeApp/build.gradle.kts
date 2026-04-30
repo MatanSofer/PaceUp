@@ -42,6 +42,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+            implementation(project(":shared:network"))
             implementation(project(":shared:supabase"))
             implementation(project(":shared:database"))
             implementation(project(":shared:auth"))
@@ -50,6 +51,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

@@ -10,6 +10,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.paceup.feature.login.LoginRoot
 import com.example.paceup.feature.welcome.WelcomeRoot
 
 /** Registers all PaceUp destinations. Stub screens replaced per feature task. */
@@ -18,7 +19,10 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         WelcomeRoot(onNavigateToLogin = { navController.navigate(LoginRoute) })
     }
     composable<LoginRoute> {
-        StubScreen("Login") { navController.navigate(SignUpRoute) }
+        LoginRoot(
+            onNavigateToStravaConnect = { navController.navigate(StravaConnectRoute) },
+            onNavigateToSignUp = { navController.navigate(SignUpRoute) }
+        )
     }
     composable<SignUpRoute> {
         StubScreen("Sign Up") { navController.navigate(StravaConnectRoute) }

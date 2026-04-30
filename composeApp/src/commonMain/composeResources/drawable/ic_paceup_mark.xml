@@ -1,50 +1,45 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-    Adaptive icon foreground — 108x108 canvas, safe zone is the inner 66x66 (centered at 54,54).
-    Keep all visible elements between x:21-87 and y:21-87.
--->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
 
-    <!-- Left arm — Primary Blue -->
+    <!-- Left arm of chevron — Primary Blue -->
     <path
         android:strokeColor="#1A73E8"
-        android:strokeWidth="13"
+        android:strokeWidth="12"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M28,87 L54,27"/>
+        android:pathData="M16,82 L50,18"/>
 
-    <!-- Right arm — Accent Orange -->
+    <!-- Right arm of chevron — Accent Orange -->
     <path
         android:strokeColor="#FF5722"
-        android:strokeWidth="13"
+        android:strokeWidth="12"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M80,87 L54,27"/>
+        android:pathData="M84,82 L50,18"/>
 
-    <!-- Speed dashes — Electric Blue, fading left -->
+    <!-- Speed dashes — Electric Blue, fading out to the left -->
     <path
         android:strokeColor="#4FC3F7"
         android:strokeWidth="5"
         android:strokeLineCap="round"
         android:strokeAlpha="0.75"
-        android:pathData="M22,58 L36,58"/>
+        android:pathData="M4,52 L21,52"/>
 
     <path
         android:strokeColor="#4FC3F7"
         android:strokeWidth="4"
         android:strokeLineCap="round"
         android:strokeAlpha="0.50"
-        android:pathData="M21,68 L33,68"/>
+        android:pathData="M2,63 L17,63"/>
 
     <path
         android:strokeColor="#4FC3F7"
         android:strokeWidth="3"
         android:strokeLineCap="round"
         android:strokeAlpha="0.28"
-        android:pathData="M21,78 L30,78"/>
+        android:pathData="M1,74 L13,74"/>
 
 </vector>
