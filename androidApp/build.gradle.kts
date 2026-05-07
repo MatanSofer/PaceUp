@@ -19,6 +19,7 @@ kotlin {
             implementation(project(":composeApp"))
             implementation(project(":shared:network"))
             implementation(project(":shared:database"))
+            implementation(project(":shared:auth"))
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
             implementation(libs.androidx.core.ktx)
