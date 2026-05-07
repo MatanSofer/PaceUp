@@ -9,6 +9,19 @@
     <string name="login_no_account">Don\'t have an account?</string>
     <string name="login_sign_up_link">Sign up</string>
 
+    <!-- Sign Up Screen -->
+    <string name="signup_title">Create Account</string>
+    <string name="signup_tagline">Find your pace. Find your people.</string>
+    <string name="signup_email_hint">Email</string>
+    <string name="signup_password_hint">Password</string>
+    <string name="signup_confirm_password_hint">Confirm Password</string>
+    <string name="signup_button">Create Account</string>
+    <string name="signup_divider_or">or</string>
+    <string name="signup_google_button">Continue with Google</string>
+    <string name="signup_apple_button">Continue with Apple</string>
+    <string name="signup_have_account">Already have an account?</string>
+    <string name="signup_login_link">Sign in</string>
+
     <!-- Auth Errors -->
     <string name="error_auth_invalid_credentials">Invalid email or password</string>
     <string name="error_auth_email_in_use">This email is already in use</string>
@@ -17,5 +30,17 @@
     <string name="error_auth_unauthorized">Access denied. Please sign in.</string>
     <string name="error_auth_oauth_cancelled">Sign-in was cancelled</string>
     <string name="error_auth_oauth_failed">Sign-in failed. Please try again.</string>
+    <string name="error_auth_email_not_confirmed">Please verify your email. Check your inbox before signing in.</string>
+    <string name="error_auth_email_rate_limited">Too many attempts. Please wait a few minutes and try again.</string>
     <string name="error_auth_unknown">Something went wrong. Please try again.</string>
+    <string name="error_invalid_email_format">Please enter a valid email address</string>
+
+    <!-- Email Verification Screen -->
+    <string name="email_verification_title">Check Your Email</string>
+    <string name="email_verification_body">We sent a verification link. Click it to activate your account, then come back to sign in.</string>
+    <string name="email_verification_back_to_login">Back to Sign In</string>
+    <string name="error_passwords_do_not_match">Passwords do not match</string>
+    <string name="error_email_required">Please enter your email address</string>
+    <string name="error_password_required">Please enter a password</string>
+    <string name="error_confirm_password_required">Please confirm your password</string>
 </resources>

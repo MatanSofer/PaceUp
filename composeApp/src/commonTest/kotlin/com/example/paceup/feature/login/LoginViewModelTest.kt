@@ -65,7 +65,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun signIn_blankEmail_setsValidationError_withoutCallingRepo() = runTest {
+    fun signIn_blankEmail_setsEmailRequiredError_withoutCallingRepo() = runTest {
         viewModel.onAction(LoginAction.OnPasswordChanged("pass"))
         viewModel.onAction(LoginAction.OnLoginClicked)
 
@@ -74,11 +74,23 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun signIn_blankPassword_setsValidationError() = runTest {
+    fun signIn_invalidEmailFormat_setsFormatError_withoutCallingRepo() = runTest {
+        viewModel.onAction(LoginAction.OnEmailChanged("notanemail"))
+        viewModel.onAction(LoginAction.OnPasswordChanged("password123"))
+        viewModel.onAction(LoginAction.OnLoginClicked)
+
+        assertNotNull(viewModel.state.value.error)
+        assertIs<UiText.StringRes>(viewModel.state.value.error)
+        assertTrue(!viewModel.state.value.isLoading)
+    }
+
+    @Test
+    fun signIn_blankPassword_setsPasswordRequiredError() = runTest {
         viewModel.onAction(LoginAction.OnEmailChanged("runner@example.com"))
         viewModel.onAction(LoginAction.OnLoginClicked)
 
         assertNotNull(viewModel.state.value.error)
+        assertIs<UiText.StringRes>(viewModel.state.value.error)
     }
 
     @Test

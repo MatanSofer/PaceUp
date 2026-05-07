@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object WelcomeRoute
 @Serializable data object LoginRoute
 @Serializable data object SignUpRoute
+@Serializable data class EmailVerificationRoute(val email: String)
 @Serializable data object StravaConnectRoute
 @Serializable data object OnboardingLocationRoute
 @Serializable data object OnboardingNotificationsRoute

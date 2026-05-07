@@ -11,6 +11,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.paceup.feature.login.LoginRoot
+import com.example.paceup.feature.signup.EmailVerificationRoot
+import com.example.paceup.feature.signup.SignUpRoot
 import com.example.paceup.feature.welcome.WelcomeRoot
 
 /** Registers all PaceUp destinations. Stub screens replaced per feature task. */
@@ -20,12 +22,34 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
     }
     composable<LoginRoute> {
         LoginRoot(
-            onNavigateToStravaConnect = { navController.navigate(StravaConnectRoute) },
+            onNavigateToStravaConnect = {
+                navController.navigate(StravaConnectRoute) {
+                    popUpTo<WelcomeRoute> { inclusive = true }
+                }
+            },
             onNavigateToSignUp = { navController.navigate(SignUpRoute) }
         )
     }
     composable<SignUpRoute> {
-        StubScreen("Sign Up") { navController.navigate(StravaConnectRoute) }
+        SignUpRoot(
+            onNavigateToEmailVerification = { email ->
+                navController.navigate(EmailVerificationRoute(email)) {
+                    popUpTo<WelcomeRoute> { inclusive = true }
+                }
+            },
+            onNavigateToLogin = { navController.popBackStack() }
+        )
+    }
+    composable<EmailVerificationRoute> { backStackEntry ->
+        val route: EmailVerificationRoute = backStackEntry.toRoute()
+        EmailVerificationRoot(
+            email = route.email,
+            onBackToLogin = {
+                navController.navigate(LoginRoute) {
+                    popUpTo<EmailVerificationRoute> { inclusive = true }
+                }
+            }
+        )
     }
     composable<StravaConnectRoute> {
         StubScreen("Strava Connect") { navController.navigate(OnboardingLocationRoute) }

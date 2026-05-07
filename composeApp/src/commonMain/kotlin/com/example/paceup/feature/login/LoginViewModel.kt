@@ -16,7 +16,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import paceup.composeapp.generated.resources.Res
-import paceup.composeapp.generated.resources.error_auth_invalid_credentials
+import paceup.composeapp.generated.resources.error_email_required
+import paceup.composeapp.generated.resources.error_invalid_email_format
+import paceup.composeapp.generated.resources.error_password_required
 
 data class LoginState(
     val email: String = "",
@@ -75,10 +77,16 @@ class LoginViewModel(
     private fun signInWithEmail() {
         val email = _state.value.email.trim()
         val password = _state.value.password
-        if (email.isBlank() || password.isBlank()) {
-            _state.update {
-                it.copy(error = UiText.StringRes(Res.string.error_auth_invalid_credentials))
-            }
+        if (email.isBlank()) {
+            _state.update { it.copy(error = UiText.StringRes(Res.string.error_email_required)) }
+            return
+        }
+        if (!emailRegex.matches(email)) {
+            _state.update { it.copy(error = UiText.StringRes(Res.string.error_invalid_email_format)) }
+            return
+        }
+        if (password.isBlank()) {
+            _state.update { it.copy(error = UiText.StringRes(Res.string.error_password_required)) }
             return
         }
         viewModelScope.launch {
@@ -134,5 +142,6 @@ class LoginViewModel(
 
     private companion object {
         const val TAG = "LoginViewModel"
+        val emailRegex = Regex("^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$")
     }
 }

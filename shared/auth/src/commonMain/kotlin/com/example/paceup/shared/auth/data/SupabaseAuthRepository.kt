@@ -129,6 +129,9 @@ class SupabaseAuthRepository(private val client: SupabaseClient) : AuthRepositor
         message?.contains("already registered", ignoreCase = true) == true ||
         message?.contains("already_registered", ignoreCase = true) == true -> AuthError.EMAIL_ALREADY_IN_USE
         message?.contains("weak_password", ignoreCase = true) == true -> AuthError.WEAK_PASSWORD
+        message?.contains("email_not_confirmed", ignoreCase = true) == true -> AuthError.EMAIL_NOT_CONFIRMED
+        message?.contains("over_email_send_rate_limit", ignoreCase = true) == true -> AuthError.EMAIL_RATE_LIMITED
+        message?.contains("email rate limit", ignoreCase = true) == true -> AuthError.EMAIL_RATE_LIMITED
         message?.contains("session_expired", ignoreCase = true) == true -> AuthError.SESSION_EXPIRED
         else -> AuthError.UNKNOWN
     }
