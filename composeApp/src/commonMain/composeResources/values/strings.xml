@@ -35,6 +35,12 @@
     <string name="error_auth_unknown">Something went wrong. Please try again.</string>
     <string name="error_invalid_email_format">Please enter a valid email address</string>
 
+    <!-- App Version Check -->
+    <string name="version_force_update_title">Update Required</string>
+    <string name="version_force_update_body">Please update PaceUp to continue.</string>
+    <string name="version_update_button">Update Now</string>
+    <string name="version_soft_update_body">A new version of PaceUp is available.</string>
+
     <!-- Email Verification Screen -->
     <string name="email_verification_title">Check Your Email</string>
     <string name="email_verification_body">We sent a verification link. Click it to activate your account, then come back to sign in.</string>

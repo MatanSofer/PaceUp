@@ -42,6 +42,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+            implementation(libs.supabase.postgrest)
             implementation(project(":shared:network"))
             implementation(project(":shared:supabase"))
             implementation(project(":shared:database"))

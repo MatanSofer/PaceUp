@@ -1,5 +1,7 @@
 package com.paceup.android
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,7 +14,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            App()
+            App(
+                appVersion = BuildConfig.VERSION_NAME,
+                onOpenAppStore = {
+                    startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
+                    )
+                }
+            )
         }
     }
 }
