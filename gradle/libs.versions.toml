@@ -9,6 +9,7 @@ composeMultiplatform = "1.10.3"
 
 # AndroidX
 androidx-activity = "1.13.0"
+androidx-browser  = "1.8.0"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.18.0"
 androidx-espresso = "3.7.0"
@@ -40,6 +41,9 @@ koin-compose = "4.1.0"
 # Supabase
 supabase = "3.1.4"
 
+# Navigation
+compose-navigation = "2.9.2"
+
 # Coil
 coil = "3.1.0"
 
@@ -60,6 +64,7 @@ androidx-testExt-junit              = { module = "androidx.test.ext:junit",     
 androidx-espresso-core              = { module = "androidx.test.espresso:espresso-core",                             version.ref = "androidx-espresso" }
 androidx-appcompat                  = { module = "androidx.appcompat:appcompat",                                     version.ref = "androidx-appcompat" }
 androidx-activity-compose           = { module = "androidx.activity:activity-compose",                               version.ref = "androidx-activity" }
+androidx-browser                    = { module = "androidx.browser:browser",                                           version.ref = "androidx-browser" }
 androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",     version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose   = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose",       version.ref = "androidx-lifecycle" }
 
@@ -106,6 +111,9 @@ supabase-auth      = { module = "io.github.jan-tennert.supabase:auth-kt",      v
 supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
 supabase-realtime  = { module = "io.github.jan-tennert.supabase:realtime-kt",  version.ref = "supabase" }
 supabase-storage   = { module = "io.github.jan-tennert.supabase:storage-kt",   version.ref = "supabase" }
+
+# Navigation
+compose-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
 
 # Coil
 coil-compose  = { module = "io.coil-kt.coil3:coil-compose",       version.ref = "coil" }

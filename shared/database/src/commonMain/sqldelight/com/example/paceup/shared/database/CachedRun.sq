@@ -1,0 +1,36 @@
+CREATE TABLE CachedRun (
+    id TEXT NOT NULL PRIMARY KEY,
+    creator_id TEXT NOT NULL,
+    title TEXT,
+    mode TEXT NOT NULL,
+    status TEXT NOT NULL,
+    scheduled_at INTEGER NOT NULL,
+    meeting_lat REAL NOT NULL,
+    meeting_lng REAL NOT NULL,
+    meeting_address TEXT NOT NULL,
+    city TEXT NOT NULL,
+    distance_km REAL,
+    pace_min_sec INTEGER,
+    pace_max_sec INTEGER,
+    max_participants INTEGER,
+    current_participants INTEGER NOT NULL,
+    join_mode TEXT NOT NULL,
+    pace_zone_filter TEXT,
+    user_status TEXT,
+    cached_at INTEGER NOT NULL
+);
+
+upsert:
+INSERT OR REPLACE INTO CachedRun VALUES ?;
+
+selectAll:
+SELECT * FROM CachedRun ORDER BY scheduled_at ASC;
+
+selectById:
+SELECT * FROM CachedRun WHERE id = ?;
+
+deleteById:
+DELETE FROM CachedRun WHERE id = ?;
+
+deleteAll:
+DELETE FROM CachedRun;

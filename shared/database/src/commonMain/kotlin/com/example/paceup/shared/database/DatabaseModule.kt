@@ -1,4 +1,10 @@
 package com.example.paceup.shared.database
 
-// TODO(paceup): implement SQLDelight schema and database setup in Task 0.7
-internal object DatabaseModule
+import org.koin.core.module.Module
+import org.koin.dsl.module
+
+/** Shared Koin module. Requires a platform-specific [DatabaseDriverFactory] binding to be present. */
+val databaseModule: Module = module {
+    single { get<DatabaseDriverFactory>().createDriver() }
+    single { PaceUpDatabase(get()) }
+}

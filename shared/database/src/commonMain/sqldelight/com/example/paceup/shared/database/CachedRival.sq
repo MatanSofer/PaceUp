@@ -1,0 +1,32 @@
+CREATE TABLE CachedRival (
+    id TEXT NOT NULL PRIMARY KEY,
+    rival_user_id TEXT NOT NULL,
+    rival_display_name TEXT NOT NULL,
+    rival_avatar_url TEXT,
+    rival_pace_zone TEXT,
+    status TEXT NOT NULL,
+    user_a_wins INTEGER NOT NULL,
+    user_b_wins INTEGER NOT NULL,
+    current_streak TEXT,
+    streak_count INTEGER NOT NULL,
+    week_start TEXT,
+    my_km REAL,
+    their_km REAL,
+    my_runs INTEGER NOT NULL,
+    their_runs INTEGER NOT NULL,
+    my_best_pace INTEGER,
+    their_best_pace INTEGER,
+    cached_at INTEGER NOT NULL
+);
+
+upsert:
+INSERT OR REPLACE INTO CachedRival VALUES ?;
+
+selectAll:
+SELECT * FROM CachedRival ORDER BY cached_at DESC;
+
+deleteById:
+DELETE FROM CachedRival WHERE id = ?;
+
+deleteAll:
+DELETE FROM CachedRival;

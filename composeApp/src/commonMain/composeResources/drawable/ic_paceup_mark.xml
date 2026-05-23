@@ -1,0 +1,45 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Left arm of chevron — Primary Blue -->
+    <path
+        android:strokeColor="#1A73E8"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M16,82 L50,18"/>
+
+    <!-- Right arm of chevron — Accent Orange -->
+    <path
+        android:strokeColor="#FF5722"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M84,82 L50,18"/>
+
+    <!-- Speed dashes — Electric Blue, fading out to the left -->
+    <path
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.75"
+        android:pathData="M4,52 L21,52"/>
+
+    <path
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.50"
+        android:pathData="M2,63 L17,63"/>
+
+    <path
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.28"
+        android:pathData="M1,74 L13,74"/>
+
+</vector>
