@@ -2,6 +2,7 @@ package com.example.paceup.di
 
 import com.example.paceup.shared.auth.di.authModule
 import com.example.paceup.shared.database.databaseModule
+import com.example.paceup.shared.runmatching.di.runMatchingModule
 import com.example.paceup.shared.supabase.di.supabaseModule
 import org.koin.core.module.Module
 
@@ -10,5 +11,6 @@ val sharedModules: List<Module> = listOf(
     supabaseModule,
     databaseModule,
     authModule,
+    runMatchingModule,
     presentationModule,
 )
