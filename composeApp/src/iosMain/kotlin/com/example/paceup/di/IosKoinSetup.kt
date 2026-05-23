@@ -1,6 +1,8 @@
 package com.example.paceup.di
 
 import com.example.paceup.platform.LocationPermissionRequester
+import com.example.paceup.platform.NotificationPermissionPrefs
+import com.example.paceup.platform.NotificationPermissionRequester
 import com.example.paceup.shared.auth.strava.KtorStravaAuthRepository
 import com.example.paceup.shared.auth.strava.OAuthBrowserLauncher
 import com.example.paceup.shared.auth.strava.StravaAuthRepository
@@ -24,6 +26,8 @@ fun initKoin(stravaClientId: String, stravaClientSecret: String) {
             )
         }
         single { LocationPermissionRequester() }
+        single { NotificationPermissionRequester() }
+        single { NotificationPermissionPrefs() }
     }
     startKoin {
         modules(sharedModules + iosModule)

@@ -3,6 +3,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- POST_NOTIFICATIONS required at runtime on Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -35,6 +37,12 @@
         <!-- Transparent activity used solely to trigger the system location permission dialog -->
         <activity
             android:name="com.example.paceup.platform.LocationPermissionActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Transparent activity used solely to trigger the POST_NOTIFICATIONS dialog (API 33+) -->
+        <activity
+            android:name="com.example.paceup.platform.NotificationPermissionActivity"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
     </application>

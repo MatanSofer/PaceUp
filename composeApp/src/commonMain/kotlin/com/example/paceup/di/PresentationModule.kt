@@ -6,6 +6,7 @@ import com.example.paceup.feature.appversion.SupabaseAppVersionRepository
 import com.example.paceup.feature.login.LoginViewModel
 import com.example.paceup.feature.signup.SignUpViewModel
 import com.example.paceup.feature.locationpermission.LocationPermissionViewModel
+import com.example.paceup.feature.notificationpermission.NotificationPermissionViewModel
 import com.example.paceup.feature.stravaconnect.StravaConnectViewModel
 import com.example.paceup.feature.welcome.WelcomeViewModel
 import org.koin.core.module.Module
@@ -20,6 +21,7 @@ val presentationModule: Module = module {
     viewModelOf(::SignUpViewModel)
     viewModelOf(::StravaConnectViewModel)
     viewModelOf(::LocationPermissionViewModel) // injects LocationPermissionRequester from platform module
+    viewModelOf(::NotificationPermissionViewModel) // injects NotificationPermissionRequester + NotificationPermissionPrefs
     single<AppVersionRepository> { SupabaseAppVersionRepository(get()) }
     viewModel { (appVersion: String) -> AppVersionViewModel(get(), appVersion) }
 }
