@@ -14,6 +14,7 @@ import com.example.paceup.feature.login.LoginRoot
 import com.example.paceup.feature.signup.EmailVerificationRoot
 import com.example.paceup.feature.signup.SignUpRoot
 import com.example.paceup.feature.locationpermission.LocationPermissionRoot
+import com.example.paceup.feature.notificationpermission.NotificationPermissionRoot
 import com.example.paceup.feature.stravaconnect.StravaConnectRoot
 import com.example.paceup.feature.welcome.WelcomeRoot
 
@@ -72,7 +73,13 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         )
     }
     composable<OnboardingNotificationsRoute> {
-        StubScreen("Notification Permission") { navController.navigate(OnboardingProfileRoute) }
+        NotificationPermissionRoot(
+            onNavigateToProfileSetup = {
+                navController.navigate(OnboardingProfileRoute) {
+                    popUpTo<OnboardingNotificationsRoute> { inclusive = true }
+                }
+            }
+        )
     }
     composable<OnboardingProfileRoute> {
         StubScreen("Profile Setup") { navController.navigate(HomeRoute) }

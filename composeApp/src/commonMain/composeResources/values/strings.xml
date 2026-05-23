@@ -67,6 +67,13 @@
     <string name="error_strava_connect_failed">Couldn\'t connect Strava. Please try again.</string>
     <string name="error_strava_fetch_failed">Connected, but couldn\'t fetch activities. Please try again.</string>
 
+    <!-- Notification Permission Screen -->
+    <string name="notification_title">Never Miss a Run</string>
+    <string name="notification_subtitle">Get notified when someone joins your run, when a partner confirms, or when a new run opens near you.</string>
+    <string name="notification_why_note">Only run-related notifications — no marketing, no spam.</string>
+    <string name="notification_turn_on_button">Turn On Notifications</string>
+    <string name="notification_maybe_later_button">Maybe later</string>
+
     <!-- Location Permission Screen -->
     <string name="location_title">Runs Near You</string>
     <string name="location_subtitle">PaceUp uses your location to show group runs near you — runs you can actually get to.</string>
