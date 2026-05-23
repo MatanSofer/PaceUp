@@ -3,6 +3,7 @@ package com.example.paceup.di
 import com.example.paceup.feature.appversion.AppVersionRepository
 import com.example.paceup.feature.appversion.AppVersionViewModel
 import com.example.paceup.feature.appversion.SupabaseAppVersionRepository
+import com.example.paceup.feature.home.HomeViewModel
 import com.example.paceup.feature.login.LoginViewModel
 import com.example.paceup.feature.signup.SignUpViewModel
 import com.example.paceup.feature.locationpermission.LocationPermissionViewModel
@@ -21,9 +22,10 @@ val presentationModule: Module = module {
     viewModelOf(::LoginViewModel)
     viewModelOf(::SignUpViewModel)
     viewModelOf(::StravaConnectViewModel)
-    viewModelOf(::LocationPermissionViewModel) // injects LocationPermissionRequester from platform module
-    viewModelOf(::NotificationPermissionViewModel) // injects NotificationPermissionRequester + NotificationPermissionPrefs
-    viewModelOf(::ProfileSetupViewModel) // injects ProfileRepository + ImagePicker
+    viewModelOf(::LocationPermissionViewModel)
+    viewModelOf(::NotificationPermissionViewModel)
+    viewModelOf(::ProfileSetupViewModel)
+    viewModelOf(::HomeViewModel)
     single<AppVersionRepository> { SupabaseAppVersionRepository(get()) }
     viewModel { (appVersion: String) -> AppVersionViewModel(get(), appVersion) }
 }

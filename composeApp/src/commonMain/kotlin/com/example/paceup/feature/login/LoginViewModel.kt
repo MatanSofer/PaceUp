@@ -3,6 +3,7 @@ package com.example.paceup.feature.login
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.paceup.platform.OnboardingPrefs
 import com.example.paceup.shared.auth.domain.AuthRepository
 import com.example.paceup.shared.network.error.AuthError
 import com.example.paceup.shared.network.logger.AppLogger
@@ -37,14 +38,15 @@ sealed interface LoginAction {
 }
 
 sealed interface LoginEvent {
-    /** Navigate to Strava connect after sign-in. TODO(paceup): route to HomeRoute when user already completed onboarding. */
     data object NavigateToStravaConnect : LoginEvent
+    data object NavigateToHome : LoginEvent
     data object NavigateToSignUp : LoginEvent
 }
 
 /** ViewModel for the Login screen. Handles email/password and OAuth sign-in. */
 class LoginViewModel(
     private val authRepository: AuthRepository,
+    private val onboardingPrefs: OnboardingPrefs,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -96,7 +98,7 @@ class LoginViewModel(
                 is Result.Success -> {
                     AppLogger.i(TAG, "signInWithEmail: success user=${result.data.id}")
                     _state.update { it.copy(isLoading = false) }
-                    _events.send(LoginEvent.NavigateToStravaConnect)
+                    _events.send(postLoginEvent())
                 }
                 is Result.Error -> {
                     AppLogger.w(TAG, "signInWithEmail: failed error=${result.error}")
@@ -113,7 +115,7 @@ class LoginViewModel(
             when (val result = authRepository.signInWithGoogle()) {
                 is Result.Success -> {
                     _state.update { it.copy(isLoading = false) }
-                    _events.send(LoginEvent.NavigateToStravaConnect)
+                    _events.send(postLoginEvent())
                 }
                 is Result.Error -> {
                     AppLogger.w(TAG, "signInWithGoogle: failed error=${result.error}")
@@ -130,7 +132,7 @@ class LoginViewModel(
             when (val result = authRepository.signInWithApple()) {
                 is Result.Success -> {
                     _state.update { it.copy(isLoading = false) }
-                    _events.send(LoginEvent.NavigateToStravaConnect)
+                    _events.send(postLoginEvent())
                 }
                 is Result.Error -> {
                     AppLogger.w(TAG, "signInWithApple: failed error=${result.error}")
@@ -139,6 +141,10 @@ class LoginViewModel(
             }
         }
     }
+
+    private fun postLoginEvent(): LoginEvent =
+        if (onboardingPrefs.isCompleted()) LoginEvent.NavigateToHome
+        else LoginEvent.NavigateToStravaConnect
 
     private companion object {
         const val TAG = "LoginViewModel"

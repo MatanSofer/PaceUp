@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.paceup.platform.ImagePicker
 import com.example.paceup.platform.ImagePickerResult
+import com.example.paceup.platform.OnboardingPrefs
 import com.example.paceup.shared.auth.profile.ProfileError
 import com.example.paceup.shared.auth.profile.ProfileRepository
 import com.example.paceup.shared.network.result.Result
@@ -43,6 +44,7 @@ sealed interface ProfileSetupEvent {
 class ProfileSetupViewModel(
     private val profileRepository: ProfileRepository,
     private val imagePicker: ImagePicker,
+    private val onboardingPrefs: OnboardingPrefs,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileSetupState())
@@ -84,7 +86,10 @@ class ProfileSetupViewModel(
                 displayName = name,
                 avatarBytes = _state.value.avatarBytes,
             )) {
-                is Result.Success -> _events.send(ProfileSetupEvent.NavigateToHome)
+                is Result.Success -> {
+                    onboardingPrefs.markCompleted()
+                    _events.send(ProfileSetupEvent.NavigateToHome)
+                }
                 is Result.Error -> _state.update {
                     it.copy(isLoading = false, error = result.error.toUiText())
                 }
