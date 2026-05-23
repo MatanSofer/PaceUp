@@ -50,6 +50,8 @@ kotlin {
             implementation(project(":shared:paceZone"))
             implementation(libs.compose.navigation)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

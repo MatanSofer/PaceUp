@@ -3,6 +3,7 @@ package com.paceup.android
 import android.app.Application
 import com.example.paceup.di.sharedModules
 import com.example.paceup.platform.LocationPermissionRequester
+import com.example.paceup.platform.ImagePicker
 import com.example.paceup.platform.NotificationPermissionPrefs
 import com.example.paceup.platform.NotificationPermissionRequester
 import com.example.paceup.shared.auth.di.androidAuthModule
@@ -32,6 +33,7 @@ class PaceUpApplication : Application() {
             single { LocationPermissionRequester(get()) }
             single { NotificationPermissionRequester(get()) }
             single { NotificationPermissionPrefs(get()) }
+            single { ImagePicker(get()) }
         }
 
         startKoin {
