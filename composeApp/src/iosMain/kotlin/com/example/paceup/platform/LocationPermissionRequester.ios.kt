@@ -1,6 +1,8 @@
 package com.example.paceup.platform
 
 import platform.CoreLocation.CLLocationManager
+import platform.CoreLocation.kCLAuthorizationStatusAuthorizedAlways
+import platform.CoreLocation.kCLAuthorizationStatusAuthorizedWhenInUse
 import platform.CoreLocation.kCLAuthorizationStatusNotDetermined
 
 /**
@@ -14,5 +16,11 @@ actual class LocationPermissionRequester {
         if (manager.authorizationStatus == kCLAuthorizationStatusNotDetermined) {
             manager.requestWhenInUseAuthorization()
         }
+    }
+
+    actual fun isGranted(): Boolean {
+        val status = CLLocationManager().authorizationStatus
+        return status == kCLAuthorizationStatusAuthorizedWhenInUse ||
+            status == kCLAuthorizationStatusAuthorizedAlways
     }
 }

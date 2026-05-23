@@ -19,7 +19,7 @@ val presentationModule: Module = module {
     viewModelOf(::LoginViewModel)
     viewModelOf(::SignUpViewModel)
     viewModelOf(::StravaConnectViewModel)
-    viewModelOf(::LocationPermissionViewModel)
+    viewModelOf(::LocationPermissionViewModel) // injects LocationPermissionRequester from platform module
     single<AppVersionRepository> { SupabaseAppVersionRepository(get()) }
     viewModel { (appVersion: String) -> AppVersionViewModel(get(), appVersion) }
 }
