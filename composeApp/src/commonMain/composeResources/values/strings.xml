@@ -67,6 +67,19 @@
     <string name="error_strava_connect_failed">Couldn\'t connect Strava. Please try again.</string>
     <string name="error_strava_fetch_failed">Connected, but couldn\'t fetch activities. Please try again.</string>
 
+    <!-- Profile Setup Screen -->
+    <string name="profile_title">Almost there</string>
+    <string name="profile_subtitle">Choose a display name. Other runners will see this when you join a run.</string>
+    <string name="profile_display_name_label">Display name</string>
+    <string name="profile_display_name_hint">e.g. Matan R.</string>
+    <string name="profile_avatar_hint">Tap to add a photo (optional)</string>
+    <string name="profile_continue_button">Continue</string>
+    <string name="error_profile_name_required">Please enter a display name</string>
+    <string name="error_profile_name_too_short">Name must be at least 2 characters</string>
+    <string name="error_profile_name_too_long">Name must be 30 characters or fewer</string>
+    <string name="error_profile_avatar_upload">Couldn\'t upload photo. You can add one later in Settings.</string>
+    <string name="error_profile_save_failed">Couldn\'t save profile. Please try again.</string>
+
     <!-- Notification Permission Screen -->
     <string name="notification_title">Never Miss a Run</string>
     <string name="notification_subtitle">Get notified when someone joins your run, when a partner confirms, or when a new run opens near you.</string>

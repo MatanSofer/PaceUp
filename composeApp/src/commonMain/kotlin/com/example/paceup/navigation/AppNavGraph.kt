@@ -10,11 +10,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.paceup.feature.home.HomeRoot
 import com.example.paceup.feature.login.LoginRoot
 import com.example.paceup.feature.signup.EmailVerificationRoot
 import com.example.paceup.feature.signup.SignUpRoot
 import com.example.paceup.feature.locationpermission.LocationPermissionRoot
 import com.example.paceup.feature.notificationpermission.NotificationPermissionRoot
+import com.example.paceup.feature.profilesetup.ProfileSetupRoot
 import com.example.paceup.feature.stravaconnect.StravaConnectRoot
 import com.example.paceup.feature.welcome.WelcomeRoot
 
@@ -27,6 +29,11 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         LoginRoot(
             onNavigateToStravaConnect = {
                 navController.navigate(StravaConnectRoute) {
+                    popUpTo<WelcomeRoute> { inclusive = true }
+                }
+            },
+            onNavigateToHome = {
+                navController.navigate(HomeRoute) {
                     popUpTo<WelcomeRoute> { inclusive = true }
                 }
             },
@@ -82,10 +89,16 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         )
     }
     composable<OnboardingProfileRoute> {
-        StubScreen("Profile Setup") { navController.navigate(HomeRoute) }
+        ProfileSetupRoot(
+            onNavigateToHome = {
+                navController.navigate(HomeRoute) {
+                    popUpTo<OnboardingProfileRoute> { inclusive = true }
+                }
+            }
+        )
     }
     composable<HomeRoute> {
-        StubScreen("Home (Map)")
+        HomeRoot()
     }
     composable<RunDetailRoute> { backStackEntry ->
         val route: RunDetailRoute = backStackEntry.toRoute()

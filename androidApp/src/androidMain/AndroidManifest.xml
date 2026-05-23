@@ -45,6 +45,12 @@
             android:name="com.example.paceup.platform.NotificationPermissionActivity"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Transparent activity that launches the system gallery picker for avatar selection -->
+        <activity
+            android:name="com.example.paceup.platform.PhotoPickerActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
     </application>
 
 </manifest>

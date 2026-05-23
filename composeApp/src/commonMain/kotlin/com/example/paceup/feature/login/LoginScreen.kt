@@ -79,6 +79,7 @@ private val ErrorRed = Color(0xFFEF4444)
 @Composable
 fun LoginRoot(
     onNavigateToStravaConnect: () -> Unit,
+    onNavigateToHome: () -> Unit,
     onNavigateToSignUp: () -> Unit,
     viewModel: LoginViewModel = koinViewModel()
 ) {
@@ -87,6 +88,7 @@ fun LoginRoot(
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             LoginEvent.NavigateToStravaConnect -> onNavigateToStravaConnect()
+            LoginEvent.NavigateToHome -> onNavigateToHome()
             LoginEvent.NavigateToSignUp -> onNavigateToSignUp()
         }
     }
