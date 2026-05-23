@@ -13,6 +13,8 @@ import androidx.navigation.toRoute
 import com.example.paceup.feature.login.LoginRoot
 import com.example.paceup.feature.signup.EmailVerificationRoot
 import com.example.paceup.feature.signup.SignUpRoot
+import com.example.paceup.feature.locationpermission.LocationPermissionRoot
+import com.example.paceup.feature.stravaconnect.StravaConnectRoot
 import com.example.paceup.feature.welcome.WelcomeRoot
 
 /** Registers all PaceUp destinations. Stub screens replaced per feature task. */
@@ -52,10 +54,22 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         )
     }
     composable<StravaConnectRoute> {
-        StubScreen("Strava Connect") { navController.navigate(OnboardingLocationRoute) }
+        StravaConnectRoot(
+            onNavigateToLocationPermission = {
+                navController.navigate(OnboardingLocationRoute) {
+                    popUpTo<StravaConnectRoute> { inclusive = true }
+                }
+            }
+        )
     }
     composable<OnboardingLocationRoute> {
-        StubScreen("Location Permission") { navController.navigate(OnboardingNotificationsRoute) }
+        LocationPermissionRoot(
+            onNavigateToNotifications = {
+                navController.navigate(OnboardingNotificationsRoute) {
+                    popUpTo<OnboardingLocationRoute> { inclusive = true }
+                }
+            }
+        )
     }
     composable<OnboardingNotificationsRoute> {
         StubScreen("Notification Permission") { navController.navigate(OnboardingProfileRoute) }

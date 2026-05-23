@@ -31,6 +31,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.ktor.client.android)
             implementation(libs.koin.android)
+            implementation(libs.androidx.browser)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

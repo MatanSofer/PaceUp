@@ -49,4 +49,28 @@
     <string name="error_email_required">Please enter your email address</string>
     <string name="error_password_required">Please enter a password</string>
     <string name="error_confirm_password_required">Please confirm your password</string>
+
+    <!-- Strava Connect Screen -->
+    <string name="strava_connect_title">Connect Strava</string>
+    <string name="strava_connect_subtitle">We use your real runs to match you with compatible runners.</string>
+    <string name="strava_connect_data_note">Only aggregated pace data is used — your activities are never stored.</string>
+    <string name="strava_connect_button">Connect with Strava</string>
+    <string name="strava_connect_skip">Skip for now</string>
+    <string name="strava_connecting">Fetching your activities…</string>
+    <string name="strava_connected_title">You\'re verified!</string>
+    <string name="strava_connected_no_runs_title">Strava connected</string>
+    <string name="strava_connected_no_runs_body">No recent runs found. You\'ll run as unverified until you log more activity on Strava.</string>
+    <string name="strava_pace_zone_label">YOUR PACE ZONE</string>
+    <string name="strava_avg_pace_label">avg pace · last 90 days</string>
+    <string name="strava_continue_button">Continue</string>
+    <string name="strava_retry_button">Try Again</string>
+    <string name="error_strava_connect_failed">Couldn\'t connect Strava. Please try again.</string>
+    <string name="error_strava_fetch_failed">Connected, but couldn\'t fetch activities. Please try again.</string>
+
+    <!-- Location Permission Screen -->
+    <string name="location_title">Runs Near You</string>
+    <string name="location_subtitle">PaceUp uses your location to show group runs near you — runs you can actually get to.</string>
+    <string name="location_why_note">Location is only active while using the app. Never shared with other users.</string>
+    <string name="location_allow_button">Allow Location</string>
+    <string name="location_skip_button">Skip for now</string>
 </resources>

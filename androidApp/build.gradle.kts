@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -37,6 +38,13 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        val localProps = Properties().apply {
+            val f = rootProject.file("local.properties")
+            if (f.exists()) load(f.inputStream())
+        }
+        buildConfigField("String", "STRAVA_CLIENT_ID", "\"${localProps["strava.client.id"] ?: ""}\"")
+        buildConfigField("String", "STRAVA_CLIENT_SECRET", "\"${localProps["strava.client.secret"] ?: ""}\"")
     }
     packaging {
         resources {

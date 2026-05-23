@@ -47,6 +47,7 @@ kotlin {
             implementation(project(":shared:supabase"))
             implementation(project(":shared:database"))
             implementation(project(":shared:auth"))
+            implementation(project(":shared:paceZone"))
             implementation(libs.compose.navigation)
             implementation(libs.kotlinx.serialization.json)
         }

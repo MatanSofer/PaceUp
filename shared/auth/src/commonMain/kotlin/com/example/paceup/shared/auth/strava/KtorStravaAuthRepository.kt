@@ -19,8 +19,22 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-/** [StravaAuthRepository] backed by Ktor HTTP calls to the Strava API. */
-class KtorStravaAuthRepository : StravaAuthRepository {
+/**
+ * [StravaAuthRepository] backed by Ktor HTTP calls to the Strava API.
+ *
+ * @param clientId Strava app client ID — sourced from BuildConfig, never hardcoded.
+ * @param clientSecret Strava app client secret — sourced from BuildConfig, never hardcoded.
+ */
+class KtorStravaAuthRepository(
+    private val clientId: String,
+    private val clientSecret: String
+) : StravaAuthRepository {
+
+    init {
+        if (clientId.isBlank() || clientSecret.isBlank()) {
+            AppLogger.e(TAG, "Strava credentials missing — add strava.client.id and strava.client.secret to local.properties")
+        }
+    }
 
     private val httpClient = HttpClient {
         install(ContentNegotiation) {
@@ -29,9 +43,8 @@ class KtorStravaAuthRepository : StravaAuthRepository {
     }
 
     override fun buildOAuthUrl(): String {
-        // TODO(paceup): replace CLIENT_ID with real value from Strava developer portal
         return "$OAUTH_BASE_URL/authorize" +
-            "?client_id=$STRAVA_CLIENT_ID" +
+            "?client_id=$clientId" +
             "&redirect_uri=${encodeUrl(REDIRECT_URI)}" +
             "&response_type=code" +
             "&approval_prompt=auto" +
@@ -44,8 +57,8 @@ class KtorStravaAuthRepository : StravaAuthRepository {
             val dto = httpClient.post("$OAUTH_BASE_URL/token") {
                 contentType(ContentType.Application.Json)
                 setBody(buildJsonObject {
-                    put("client_id", STRAVA_CLIENT_ID)
-                    put("client_secret", STRAVA_CLIENT_SECRET)
+                    put("client_id", clientId)
+                    put("client_secret", clientSecret)
                     put("code", code)
                     put("grant_type", "authorization_code")
                 })
@@ -84,13 +97,9 @@ class KtorStravaAuthRepository : StravaAuthRepository {
         const val TAG = "KtorStravaAuthRepository"
         const val OAUTH_BASE_URL = "https://www.strava.com/oauth"
         const val API_BASE_URL = "https://www.strava.com/api/v3"
-        const val REDIRECT_URI = "paceup://strava/callback"
+        const val REDIRECT_URI = "paceup://localhost/callback"
         const val SCOPE = "activity:read_all,profile:read_all"
         const val MIN_DISTANCE_METERS = 3000f // spec: only runs > 3km included in pace zone calc
-
-        // TODO(paceup): move to local.properties / build config before production
-        const val STRAVA_CLIENT_ID = "YOUR_STRAVA_CLIENT_ID"
-        const val STRAVA_CLIENT_SECRET = "YOUR_STRAVA_CLIENT_SECRET"
     }
 }
 

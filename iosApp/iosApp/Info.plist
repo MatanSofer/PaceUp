@@ -4,5 +4,32 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>PaceUp uses your location to show group runs near you.</string>
+
+	<!-- TODO(paceup): move to xcconfig before PR — never commit real secrets in Info.plist.
+	     Steps: create iosApp/Config/Secrets.xcconfig (gitignored) with:
+	       STRAVA_CLIENT_ID = 249709
+	       STRAVA_CLIENT_SECRET = <your_secret>
+	     Then in Xcode: Project → Info → Configurations → set Secrets.xcconfig for Debug/Release.
+	     Replace these string values with $(STRAVA_CLIENT_ID) and $(STRAVA_CLIENT_SECRET). -->
+	<key>STRAVA_CLIENT_ID</key>
+	<string>$(STRAVA_CLIENT_ID)</string>
+	<key>STRAVA_CLIENT_SECRET</key>
+	<string>$(STRAVA_CLIENT_SECRET)</string>
+
+	<!-- Custom URL scheme for Strava OAuth callback: paceup://localhost/callback -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>paceup</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.example.paceup</string>
+		</dict>
+	</array>
 </dict>
 </plist>
