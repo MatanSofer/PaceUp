@@ -98,7 +98,14 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         )
     }
     composable<HomeRoute> {
-        HomeRoot()
+        HomeRoot(
+            onNavigateToRunDetail = { runId ->
+                navController.navigate(RunDetailRoute(runId))
+            },
+            onNavigateToCreateRun = {
+                navController.navigate(CreateRunRoute)
+            },
+        )
     }
     composable<RunDetailRoute> { backStackEntry ->
         val route: RunDetailRoute = backStackEntry.toRoute()

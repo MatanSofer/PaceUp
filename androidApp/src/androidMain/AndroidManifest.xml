@@ -51,6 +51,11 @@
             android:name="com.example.paceup.platform.PhotoPickerActivity"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- TODO(paceup): replace placeholder with real Maps API key from local.properties -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
     </application>
 
 </manifest>

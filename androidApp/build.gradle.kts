@@ -45,6 +45,7 @@ android {
         }
         buildConfigField("String", "STRAVA_CLIENT_ID", "\"${localProps["strava.client.id"] ?: ""}\"")
         buildConfigField("String", "STRAVA_CLIENT_SECRET", "\"${localProps["strava.client.secret"] ?: ""}\"")
+        manifestPlaceholders["MAPS_API_KEY"] = localProps["maps.api.key"] ?: ""
     }
     packaging {
         resources {

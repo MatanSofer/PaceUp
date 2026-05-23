@@ -25,7 +25,7 @@ val presentationModule: Module = module {
     viewModelOf(::LocationPermissionViewModel)
     viewModelOf(::NotificationPermissionViewModel)
     viewModelOf(::ProfileSetupViewModel)
-    viewModelOf(::HomeViewModel)
+    viewModelOf(::HomeViewModel) // RunRepository injected automatically
     single<AppVersionRepository> { SupabaseAppVersionRepository(get()) }
     viewModel { (appVersion: String) -> AppVersionViewModel(get(), appVersion) }
 }

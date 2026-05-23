@@ -47,6 +47,9 @@ compose-navigation = "2.9.2"
 # Coil
 coil = "3.1.0"
 
+# Google Maps
+maps-compose = "4.4.1"
+
 # KtLint
 ktlint = "12.1.2"
 
@@ -118,6 +121,9 @@ compose-navigation = { module = "org.jetbrains.androidx.navigation:navigation-co
 # Coil
 coil-compose  = { module = "io.coil-kt.coil3:coil-compose",       version.ref = "coil" }
 coil-network  = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+
+# Google Maps
+maps-compose  = { module = "com.google.maps.android:maps-compose", version.ref = "maps-compose" }
 
 [plugins]
 androidApplication   = { id = "com.android.application",                         version.ref = "agp" }
