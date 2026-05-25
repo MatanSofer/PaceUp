@@ -28,6 +28,12 @@ interface RunRepository {
     ): Result<List<Run>, AppError>
 
     /**
+     * Returns accepted participants for a run, each with basic profile data
+     * for rendering participant avatars with pace zone rings (SPEC.md §4.4).
+     */
+    suspend fun getRunParticipants(runId: String): Result<List<RunParticipant>, AppError>
+
+    /**
      * Emits [RunStatus] updates for a specific run in real-time.
      * Caller is responsible for cancelling the returned [Flow].
      */

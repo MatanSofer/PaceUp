@@ -11,6 +11,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.paceup.feature.home.HomeRoot
+import com.example.paceup.feature.rundetail.RunDetailRoot
 import com.example.paceup.feature.login.LoginRoot
 import com.example.paceup.feature.signup.EmailVerificationRoot
 import com.example.paceup.feature.signup.SignUpRoot
@@ -107,9 +108,8 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
             },
         )
     }
-    composable<RunDetailRoute> { backStackEntry ->
-        val route: RunDetailRoute = backStackEntry.toRoute()
-        StubScreen("Run Detail — ${route.runId}")
+    composable<RunDetailRoute> {
+        RunDetailRoot(onNavigateBack = { navController.popBackStack() })
     }
     composable<CreateRunRoute> {
         StubScreen("Create Run")

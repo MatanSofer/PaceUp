@@ -7,6 +7,7 @@ import com.example.paceup.shared.network.result.Result
 import com.example.paceup.shared.runmatching.domain.Run
 import com.example.paceup.shared.runmatching.domain.RunDto
 import com.example.paceup.shared.runmatching.domain.RunFilters
+import com.example.paceup.shared.runmatching.domain.RunParticipant
 import com.example.paceup.shared.runmatching.domain.RunRepository
 import com.example.paceup.shared.runmatching.domain.RunStatus
 import com.example.paceup.shared.runmatching.domain.toDomain
@@ -141,6 +142,27 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
             onSuccess = { Result.Success(it) },
             onFailure = { e ->
                 AppLogger.e(TAG, "searchRuns failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
+    override suspend fun getRunParticipants(runId: String): Result<List<RunParticipant>, AppError> {
+        AppLogger.d(TAG, "getRunParticipants runId=$runId")
+        return runCatching {
+            supabase.postgrest["run_participants"]
+                .select(Columns.raw("user_id, status, users(id, display_name, avatar_url, pace_zone, show_up_rate)")) {
+                    filter {
+                        eq("run_id", runId)
+                        eq("status", "accepted")
+                    }
+                }
+                .decodeList<RunParticipantDto>()
+                .map { it.toDomain() }
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "getRunParticipants failed: ${e.message}")
                 Result.Error(RunError.NETWORK_ERROR)
             }
         )
