@@ -64,7 +64,11 @@ data class RunFilters(
     val modes: List<RunMode> = emptyList(),
     val verifiedOnly: Boolean? = null,
     val maxDistanceKm: Float? = null,
+    val minDistanceKm: Float? = null,
     val afterDate: String? = null,
+    val beforeDate: String? = null,
+    val openJoinOnly: Boolean? = null,
+    val recurringOnly: Boolean? = null,
 )
 
 /** Raw Supabase row shape for the `runs` table. */

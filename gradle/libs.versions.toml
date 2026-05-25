@@ -53,6 +53,9 @@ maps-compose = "4.4.1"
 # KtLint
 ktlint = "12.1.2"
 
+# DateTime
+kotlinx-datetime = "0.6.2"
+
 [libraries]
 # Kotlin
 kotlin-test      = { module = "org.jetbrains.kotlin:kotlin-test",       version.ref = "kotlin" }
@@ -124,6 +127,9 @@ coil-network  = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = 
 
 # Google Maps
 maps-compose  = { module = "com.google.maps.android:maps-compose", version.ref = "maps-compose" }
+
+# DateTime
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
 [plugins]
 androidApplication   = { id = "com.android.application",                         version.ref = "agp" }

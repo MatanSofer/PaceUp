@@ -33,17 +33,20 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.paceup.platform.LocationEffect
 import com.example.paceup.platform.PaceUpMap
 import com.example.paceup.shared.runmatching.domain.RunMode
 import com.example.paceup.ui.ObserveAsEvents
@@ -57,29 +60,77 @@ private val TextPrimary = Color(0xFFF9FAFB)
 private val TextMuted = Color(0xFF9CA3AF)
 private val PrimaryBlue = Color(0xFF1A73E8)
 
+/** Which discovery tab is active. */
+enum class DiscoveryTab { MAP, LIST }
+
+/** Height of the tab bar + its top gap — content must be shifted down by this amount. */
+private val TabBarHeight = 40.dp
+private val TabBarTopGap = 8.dp
+val TabBarContentOffset: Dp = TabBarHeight + TabBarTopGap
+
 // ── Root ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Root for the discovery home screen.
+ * Manages the MAP / LIST tab state and renders the shared tab bar overlay.
+ */
 @Composable
 fun HomeRoot(
     onNavigateToRunDetail: (String) -> Unit = {},
     onNavigateToCreateRun: () -> Unit = {},
-    viewModel: HomeViewModel = koinViewModel(),
+    mapViewModel: HomeViewModel = koinViewModel(),
+    listViewModel: RunListViewModel = koinViewModel(),
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    var activeTab by remember { mutableStateOf(DiscoveryTab.MAP) }
+    val mapState by mapViewModel.state.collectAsStateWithLifecycle()
+    val listState by listViewModel.state.collectAsStateWithLifecycle()
 
-    ObserveAsEvents(viewModel.events) { event ->
+    ObserveAsEvents(mapViewModel.events) { event ->
         when (event) {
             is HomeEvent.NavigateToRunDetail -> onNavigateToRunDetail(event.runId)
             HomeEvent.NavigateToCreateRun -> onNavigateToCreateRun()
         }
     }
+    ObserveAsEvents(listViewModel.events) { event ->
+        when (event) {
+            is RunListEvent.NavigateToRunDetail -> onNavigateToRunDetail(event.runId)
+        }
+    }
 
-    HomeScreen(
-        state = state,
-        onAction = viewModel::onAction,
-        onJoinRunClick = viewModel::onJoinRunClick,
-        onCreateRunClick = viewModel::onCreateRunClick,
-    )
+    // Feed real device location into both ViewModels once on first composition.
+    LocationEffect { latLng ->
+        mapViewModel.onAction(HomeAction.OnLocationUpdate(latLng))
+        listViewModel.onAction(RunListAction.OnLocationUpdate(latLng))
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Active tab content
+        when (activeTab) {
+            DiscoveryTab.MAP -> HomeScreen(
+                state = mapState,
+                onAction = mapViewModel::onAction,
+                onJoinRunClick = mapViewModel::onJoinRunClick,
+                onCreateRunClick = mapViewModel::onCreateRunClick,
+                tabBarOffset = TabBarContentOffset,
+            )
+            DiscoveryTab.LIST -> RunListRoot(
+                onNavigateToRunDetail = onNavigateToRunDetail,
+                onNavigateToCreateRun = onNavigateToCreateRun,
+                tabBarOffset = TabBarContentOffset,
+                viewModel = listViewModel,
+            )
+        }
+
+        // Tab bar overlay — always rendered on top
+        DiscoveryTabBar(
+            activeTab = activeTab,
+            onTabSelected = { activeTab = it },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .systemBarsPadding()
+                .padding(top = TabBarTopGap),
+        )
+    }
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
@@ -91,6 +142,7 @@ fun HomeScreen(
     onAction: (HomeAction) -> Unit,
     onJoinRunClick: (String) -> Unit,
     onCreateRunClick: () -> Unit,
+    tabBarOffset: Dp = 0.dp,
 ) {
     val mapCenter = state.userLocation ?: DefaultMapCenter
 
@@ -111,7 +163,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .systemBarsPadding()
-                .padding(top = 12.dp),
+                .padding(top = 12.dp + tabBarOffset),
         ) {
             SearchBar(
                 query = state.searchQuery,
@@ -332,6 +384,53 @@ private fun RunMode.chipLabel() = when (this) {
     RunMode.RECOVERY -> "Recovery"
     RunMode.TOURIST -> "Tourist"
     RunMode.PACER -> "Pacer"
+}
+
+// ── Discovery tab bar ─────────────────────────────────────────────────────────
+
+/** Frosted-glass segment control switching between Map and List discovery tabs. */
+@Composable
+fun DiscoveryTabBar(
+    activeTab: DiscoveryTab,
+    onTabSelected: (DiscoveryTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(100.dp))
+            .background(SurfaceColor.copy(alpha = 0.95f))
+            .border(1.dp, Color(0xFF374151), RoundedCornerShape(100.dp)),
+    ) {
+        TabSegment(
+            label = "Map",
+            isActive = activeTab == DiscoveryTab.MAP,
+            onClick = { onTabSelected(DiscoveryTab.MAP) },
+        )
+        TabSegment(
+            label = "List",
+            isActive = activeTab == DiscoveryTab.LIST,
+            onClick = { onTabSelected(DiscoveryTab.LIST) },
+        )
+    }
+}
+
+@Composable
+private fun TabSegment(label: String, isActive: Boolean, onClick: () -> Unit) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .clip(RoundedCornerShape(100.dp))
+            .background(if (isActive) PrimaryBlue else Color.Transparent)
+            .clickable { onClick() }
+            .padding(horizontal = 28.dp, vertical = 10.dp),
+    ) {
+        Text(
+            text = label,
+            color = if (isActive) Color.White else TextMuted,
+            fontSize = 14.sp,
+            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+        )
+    }
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────

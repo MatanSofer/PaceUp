@@ -93,10 +93,12 @@ class HomeViewModel(
 
             HomeAction.OnSearchSubmit -> searchRuns()
 
-            is HomeAction.OnLocationUpdate -> {
+            is HomeAction.OnLocationUpdate ->
+                // Location is used only for the map camera and the blue dot marker.
+                // Runs are always fetched from DefaultMapCenter on init (or on
+                // explicit refresh/search) — fetching from the device location would
+                // return nothing when the user is far from the seeded data area.
                 _state.update { it.copy(userLocation = action.latLng) }
-                loadRuns(center = action.latLng)
-            }
 
             HomeAction.OnRefresh -> loadRuns()
         }

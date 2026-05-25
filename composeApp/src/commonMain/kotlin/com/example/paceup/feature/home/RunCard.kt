@@ -35,12 +35,14 @@ private val PrimaryBlue = Color(0xFF1A73E8)
 /**
  * Run card matching the design spec layout.
  * Left-edge accent bar shows pace zone color.
+ * @param scheduledTimeDisplay optional pre-formatted time string shown in the list view.
  */
 @Composable
 fun RunCard(
     run: Run,
     onJoinClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    scheduledTimeDisplay: String? = null,
 ) {
     val zone = run.paceZone()
     val zoneColor = zone.color()
@@ -86,6 +88,17 @@ fun RunCard(
             Spacer(Modifier.height(8.dp))
             HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
             Spacer(Modifier.height(8.dp))
+
+            // Scheduled time (shown in list view)
+            if (scheduledTimeDisplay != null) {
+                Text(
+                    text = "🕐 $scheduledTimeDisplay",
+                    color = TextMuted,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                )
+                Spacer(Modifier.height(4.dp))
+            }
 
             // Location
             Text(

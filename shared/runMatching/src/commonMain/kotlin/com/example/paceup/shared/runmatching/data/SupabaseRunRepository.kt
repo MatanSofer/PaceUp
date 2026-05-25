@@ -163,7 +163,11 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
                 (filters.paceMaxSec == null || run.paceMinSec <= filters.paceMaxSec) &&
                 (filters.modes.isEmpty() || run.mode in filters.modes) &&
                 (filters.verifiedOnly == null || run.verifiedOnly == filters.verifiedOnly) &&
-                (filters.afterDate == null || run.scheduledAt >= filters.afterDate)
+                (filters.afterDate == null || run.scheduledAt >= filters.afterDate) &&
+                (filters.beforeDate == null || run.scheduledAt <= filters.beforeDate) &&
+                (filters.minDistanceKm == null || (run.distanceKm != null && run.distanceKm >= filters.minDistanceKm)) &&
+                (filters.openJoinOnly != true || run.joinMode == "open") &&
+                (filters.recurringOnly != true || run.isRecurring)
         }
     }
 
