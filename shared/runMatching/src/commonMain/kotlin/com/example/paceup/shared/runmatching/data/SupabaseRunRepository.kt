@@ -4,6 +4,7 @@ import com.example.paceup.shared.network.error.AppError
 import com.example.paceup.shared.network.error.RunError
 import com.example.paceup.shared.network.logger.AppLogger
 import com.example.paceup.shared.network.result.Result
+import com.example.paceup.shared.runmatching.domain.CreateRunParams
 import com.example.paceup.shared.runmatching.domain.Run
 import com.example.paceup.shared.runmatching.domain.RunDto
 import com.example.paceup.shared.runmatching.domain.RunFilters
@@ -109,6 +110,22 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
             onSuccess = { Result.Success(it) },
             onFailure = { e ->
                 AppLogger.e(TAG, "getRunsForUser failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
+    override suspend fun createRun(params: CreateRunParams): Result<Run, AppError> {
+        AppLogger.d(TAG, "createRun mode=${params.mode.value} creator=${params.creatorId}")
+        return runCatching {
+            supabase.postgrest[TABLE]
+                .insert(params.toDto())
+                .decodeSingle<RunDto>()
+                .toDomain()
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "createRun failed: ${e.message}")
                 Result.Error(RunError.NETWORK_ERROR)
             }
         )

@@ -804,7 +804,13 @@ MapDiscoveryState(
 - **Dependencies:** Task 1.2, Task 0.3
 - **Deliverable:** `RunRepository.createRun(params)` working and verified in Supabase
 
-- [ ] Done
+- [x] Done
+  - `CreateRunParams` domain model in shared/runMatching/domain — all runs table fields; creatorId passed by caller from auth session
+  - `CreateRunDto` + `CreateRunParams.toDto()` mapper in shared/runMatching/data — excludes auto-generated fields (id, status, created_at)
+  - `RunRepository.createRun(params)` added to interface; `SupabaseRunRepository` implements with `postgrest[TABLE].insert(params.toDto()).decodeSingle<RunDto>().toDomain()`
+  - `Run`/`RunDto` extended with `ageMin`, `ageMax`, `genderFilter`, `recurrenceRule`, `cancellationReason` (all default null/"any")
+  - `FakeRunRepository.createRun()` stub added for test compilation
+  - Build verified: `./gradlew :androidApp:assembleDebug` + `:composeApp:testDebugUnitTest` — BUILD SUCCESSFUL
 
 ---
 

@@ -3,6 +3,7 @@ package com.example.paceup.feature.rundetail
 import com.example.paceup.shared.network.error.AppError
 import com.example.paceup.shared.network.error.RunError
 import com.example.paceup.shared.network.result.Result
+import com.example.paceup.shared.runmatching.domain.CreateRunParams
 import com.example.paceup.shared.runmatching.domain.Run
 import com.example.paceup.shared.runmatching.domain.RunFilters
 import com.example.paceup.shared.runmatching.domain.RunMode
@@ -63,6 +64,9 @@ class FakeRunRepository : RunRepository {
 
     override suspend fun getRunParticipants(runId: String): Result<List<RunParticipant>, AppError> =
         participantsResult
+
+    override suspend fun createRun(params: CreateRunParams): Result<Run, AppError> =
+        Result.Error(RunError.NETWORK_ERROR)
 
     override suspend fun getRunsNearLocation(
         lat: Double,

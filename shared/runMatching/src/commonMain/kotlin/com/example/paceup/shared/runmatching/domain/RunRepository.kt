@@ -21,6 +21,12 @@ interface RunRepository {
     /** Returns all runs where [userId] is a participant or creator. */
     suspend fun getRunsForUser(userId: String): Result<List<Run>, AppError>
 
+    /**
+     * Inserts a new run into Supabase and returns the created [Run] with its server-assigned ID.
+     * The caller is responsible for passing the authenticated user's ID as [CreateRunParams.creatorId].
+     */
+    suspend fun createRun(params: CreateRunParams): Result<Run, AppError>
+
     /** Full-text search by city, neighbourhood, or route name with optional filters. */
     suspend fun searchRuns(
         query: String,
