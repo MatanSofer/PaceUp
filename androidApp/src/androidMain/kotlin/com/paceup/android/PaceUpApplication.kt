@@ -7,6 +7,7 @@ import com.example.paceup.platform.LocationPermissionRequester
 import com.example.paceup.platform.NotificationPermissionPrefs
 import com.example.paceup.platform.NotificationPermissionRequester
 import com.example.paceup.platform.OnboardingPrefs
+import com.example.paceup.platform.OnboardingPrefsSource
 import com.example.paceup.shared.auth.di.androidAuthModule
 import com.example.paceup.shared.auth.strava.KtorStravaAuthRepository
 import com.example.paceup.shared.auth.strava.StravaAuthRepository
@@ -34,7 +35,7 @@ class PaceUpApplication : Application() {
             single { LocationPermissionRequester(get()) }
             single { NotificationPermissionRequester(get()) }
             single { NotificationPermissionPrefs(get()) }
-            single { OnboardingPrefs(get()) }
+            single<OnboardingPrefsSource> { OnboardingPrefs(get()) }
             single { ImagePicker(get()) }
         }
 

@@ -1,0 +1,83 @@
+package com.example.paceup.feature.rundetail
+
+import com.example.paceup.shared.network.error.AppError
+import com.example.paceup.shared.network.error.RunError
+import com.example.paceup.shared.network.result.Result
+import com.example.paceup.shared.runmatching.domain.Run
+import com.example.paceup.shared.runmatching.domain.RunFilters
+import com.example.paceup.shared.runmatching.domain.RunMode
+import com.example.paceup.shared.runmatching.domain.RunParticipant
+import com.example.paceup.shared.runmatching.domain.RunRepository
+import com.example.paceup.shared.runmatching.domain.RunStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+
+val fakeRun = Run(
+    id = "run-1",
+    creatorId = "creator-1",
+    title = "Morning tempo",
+    description = "A brisk morning run along the promenade.",
+    mode = RunMode.TEMPO,
+    status = RunStatus.OPEN,
+    scheduledAt = "2026-06-01T07:00:00Z",
+    meetingLat = 32.08,
+    meetingLng = 34.78,
+    meetingAddress = "Gordon Beach, Tel Aviv",
+    city = "Tel Aviv",
+    distanceKm = 8f,
+    durationMin = null,
+    paceMinSec = 300,
+    paceMaxSec = 330,
+    maxParticipants = 10,
+    verifiedOnly = true,
+    joinMode = "open",
+    isRecurring = false,
+    createdAt = "2026-05-25T12:00:00Z",
+)
+
+val fakeParticipants = listOf(
+    RunParticipant(
+        userId = "user-2",
+        displayName = "Maya Cohen",
+        avatarUrl = null,
+        paceZone = "C",
+        showUpRate = 0.92f,
+        status = "accepted",
+    ),
+    RunParticipant(
+        userId = "user-3",
+        displayName = "Dan Levi",
+        avatarUrl = null,
+        paceZone = "B",
+        showUpRate = 0.68f,
+        status = "accepted",
+    ),
+)
+
+class FakeRunRepository : RunRepository {
+
+    var runByIdResult: Result<Run, AppError> = Result.Success(fakeRun)
+    var participantsResult: Result<List<RunParticipant>, AppError> = Result.Success(fakeParticipants)
+
+    override suspend fun getRunById(runId: String): Result<Run, AppError> = runByIdResult
+
+    override suspend fun getRunParticipants(runId: String): Result<List<RunParticipant>, AppError> =
+        participantsResult
+
+    override suspend fun getRunsNearLocation(
+        lat: Double,
+        lng: Double,
+        radiusKm: Double,
+        filters: RunFilters,
+    ): Result<List<Run>, AppError> = Result.Success(emptyList())
+
+    override suspend fun getRunsForUser(userId: String): Result<List<Run>, AppError> =
+        Result.Success(emptyList())
+
+    override suspend fun searchRuns(
+        query: String,
+        filters: RunFilters,
+    ): Result<List<Run>, AppError> = Result.Success(emptyList())
+
+    override fun observeRunStatus(runId: String): Flow<RunStatus> = emptyFlow()
+}

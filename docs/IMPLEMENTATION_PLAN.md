@@ -758,6 +758,9 @@ MapDiscoveryState(
   - `RunDetailRoot` wired into `AppNavGraph` (replaces stub)
   - `RunDetailViewModel` added to `presentationModule`
   - Build verified: `./gradlew :androidApp:assembleDebug` — BUILD SUCCESSFUL
+  - `OnboardingPrefsSource` interface extracted so ViewModels can be tested without Android Context — `OnboardingPrefs` expect/actual implements it; Koin binding updated on Android + iOS; fixes pre-existing test breakage from Task 2.7
+  - `FakeRunRepository` + 9-case `RunDetailViewModelTest` — all passing
+  - Full test suite: `./gradlew :composeApp:testDebugUnitTest` — BUILD SUCCESSFUL
 
 ---
 

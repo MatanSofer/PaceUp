@@ -32,7 +32,7 @@ class LoginViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         fakeRepo = FakeAuthRepository()
-        viewModel = LoginViewModel(fakeRepo, SavedStateHandle())
+        viewModel = LoginViewModel(fakeRepo, FakeOnboardingPrefsSource(), SavedStateHandle())
     }
 
     @AfterTest
@@ -140,7 +140,7 @@ class LoginViewModelTest {
     @Test
     fun savedStateHandle_restoresEmail() {
         val handle = SavedStateHandle(mapOf("email" to "saved@example.com"))
-        val vm = LoginViewModel(fakeRepo, handle)
+        val vm = LoginViewModel(fakeRepo, FakeOnboardingPrefsSource(), handle)
         assertEquals("saved@example.com", vm.state.value.email)
     }
 }

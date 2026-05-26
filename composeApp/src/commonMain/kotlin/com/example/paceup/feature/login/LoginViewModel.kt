@@ -3,7 +3,7 @@ package com.example.paceup.feature.login
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.paceup.platform.OnboardingPrefs
+import com.example.paceup.platform.OnboardingPrefsSource
 import com.example.paceup.shared.auth.domain.AuthRepository
 import com.example.paceup.shared.network.error.AuthError
 import com.example.paceup.shared.network.logger.AppLogger
@@ -46,7 +46,7 @@ sealed interface LoginEvent {
 /** ViewModel for the Login screen. Handles email/password and OAuth sign-in. */
 class LoginViewModel(
     private val authRepository: AuthRepository,
-    private val onboardingPrefs: OnboardingPrefs,
+    private val onboardingPrefs: OnboardingPrefsSource,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
