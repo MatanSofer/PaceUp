@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,8 +30,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -78,6 +77,7 @@ val TabBarContentOffset: Dp = TabBarHeight + TabBarTopGap
 fun HomeRoot(
     onNavigateToRunDetail: (String) -> Unit = {},
     onNavigateToCreateRun: () -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
     mapViewModel: HomeViewModel = koinViewModel(),
     listViewModel: RunListViewModel = koinViewModel(),
 ) {
@@ -111,6 +111,7 @@ fun HomeRoot(
                 onAction = mapViewModel::onAction,
                 onJoinRunClick = mapViewModel::onJoinRunClick,
                 onCreateRunClick = mapViewModel::onCreateRunClick,
+                onSearchClick = onNavigateToSearch,
                 tabBarOffset = TabBarContentOffset,
             )
             DiscoveryTab.LIST -> RunListRoot(
@@ -142,6 +143,7 @@ fun HomeScreen(
     onAction: (HomeAction) -> Unit,
     onJoinRunClick: (String) -> Unit,
     onCreateRunClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
     tabBarOffset: Dp = 0.dp,
 ) {
     val mapCenter = state.userLocation ?: DefaultMapCenter
@@ -165,10 +167,8 @@ fun HomeScreen(
                 .systemBarsPadding()
                 .padding(top = 12.dp + tabBarOffset),
         ) {
-            SearchBar(
-                query = state.searchQuery,
-                onQueryChange = { onAction(HomeAction.OnSearchQueryChange(it)) },
-                onSubmit = { onAction(HomeAction.OnSearchSubmit) },
+            SearchBarButton(
+                onClick = onSearchClick,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
             Spacer(Modifier.height(8.dp))
@@ -278,38 +278,31 @@ fun HomeScreen(
     }
 }
 
-// ── Search bar ────────────────────────────────────────────────────────────────
+// ── Search bar (tap-to-navigate) ──────────────────────────────────────────────
 
 @Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onSubmit: () -> Unit,
+private fun SearchBarButton(
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = {
-            Text(
-                text = "Search runs, city, neighbourhood…",
-                color = TextMuted,
-                fontSize = 15.sp,
-            )
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(100.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = SurfaceColor.copy(alpha = 0.95f),
-            unfocusedContainerColor = SurfaceColor.copy(alpha = 0.9f),
-            focusedTextColor = TextPrimary,
-            unfocusedTextColor = TextPrimary,
-            cursorColor = PrimaryBlue,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-        ),
-        modifier = modifier.fillMaxWidth(),
-    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(100.dp))
+            .background(SurfaceColor.copy(alpha = 0.9f))
+            .border(1.dp, Color(0xFF374151), RoundedCornerShape(100.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+    ) {
+        Text(text = "🔍", fontSize = 15.sp)
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = "Search runs, city, neighbourhood…",
+            color = TextMuted,
+            fontSize = 15.sp,
+        )
+    }
 }
 
 // ── Filter chips ──────────────────────────────────────────────────────────────

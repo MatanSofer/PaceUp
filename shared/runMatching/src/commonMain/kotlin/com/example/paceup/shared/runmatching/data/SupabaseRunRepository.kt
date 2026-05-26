@@ -133,7 +133,7 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
                             }
                         }
                     }
-                    limit(100)
+                    limit(50)
                 }
                 .decodeList<RunDto>()
 

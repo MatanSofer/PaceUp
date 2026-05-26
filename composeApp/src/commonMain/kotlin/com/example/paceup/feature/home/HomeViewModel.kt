@@ -27,7 +27,6 @@ data class MapDiscoveryState(
     val userLocation: LatLng? = null,
     val error: UiText? = null,
     val showTooltip: Boolean = false,
-    val searchQuery: String = "",
 )
 
 // Keep HomeState as a typealias so existing usages (nav graph, tooltip) compile unchanged
@@ -39,8 +38,6 @@ sealed interface HomeAction {
     data object OnBottomSheetDismiss : HomeAction
     data class OnModeFilterToggle(val mode: RunMode) : HomeAction
     data object OnVerifiedOnlyToggle : HomeAction
-    data class OnSearchQueryChange(val query: String) : HomeAction
-    data object OnSearchSubmit : HomeAction
     data class OnLocationUpdate(val latLng: LatLng) : HomeAction
     data object OnRefresh : HomeAction
 }
@@ -80,18 +77,13 @@ class HomeViewModel(
                 val current = _state.value.activeModeFilters.toMutableList()
                 if (action.mode in current) current.remove(action.mode) else current.add(action.mode)
                 _state.update { it.copy(activeModeFilters = current) }
-                applyFilters()
+                loadRuns()
             }
 
             HomeAction.OnVerifiedOnlyToggle -> {
                 _state.update { it.copy(verifiedOnlyFilter = !it.verifiedOnlyFilter) }
-                applyFilters()
+                loadRuns()
             }
-
-            is HomeAction.OnSearchQueryChange ->
-                _state.update { it.copy(searchQuery = action.query) }
-
-            HomeAction.OnSearchSubmit -> searchRuns()
 
             is HomeAction.OnLocationUpdate ->
                 // Location is used only for the map camera and the blue dot marker.
@@ -134,27 +126,6 @@ class HomeViewModel(
                 }
             }
         }
-    }
-
-    private fun searchRuns() {
-        val query = _state.value.searchQuery.trim()
-        if (query.isBlank()) { loadRuns(); return }
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-            when (val result = runRepository.searchRuns(query, buildFilters())) {
-                is Result.Success -> _state.update {
-                    it.copy(runs = result.data, isLoading = false)
-                }
-                is Result.Error -> _state.update {
-                    it.copy(isLoading = false, error = UiText.DynamicString("Search failed"))
-                }
-            }
-        }
-    }
-
-    private fun applyFilters() {
-        val s = _state.value
-        if (s.searchQuery.isNotBlank()) searchRuns() else loadRuns()
     }
 
     private fun buildFilters(): RunFilters {

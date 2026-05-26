@@ -772,7 +772,21 @@ MapDiscoveryState(
 - **Dependencies:** Task 3.1
 - **Deliverable:** Search bar functional. Results debounced 300ms. FTS indexes applied in Supabase. User search reusable in rival flow and person lookup.
 
-- [ ] Done
+- [x] Done
+  - Supabase: pg_trgm extension + GIN trigram indexes on runs(city, meeting_address, title) and users(display_name)
+  - `UserSummary` domain model + `UserRepository` interface in shared/runMatching
+  - `UserSearchDto` + `SupabaseUserRepository.searchUsers()` — ilike on display_name, capped at 50, filters banned/suspended
+  - `searchRuns()` limit fixed from 100 → 50 (spec §10.6)
+  - `UserRepository` binding added to `runMatchingModule`
+  - `SearchViewModel`: Run + People tabs, 300ms debounce via `Flow.debounce()`, `@OptIn(FlowPreview::class)`
+  - `SearchScreen`: full-screen dark UI, auto-focused search field, tab bar (Runs/People), run cards + user result cards with zone ring + show-up rate, empty/no-results states
+  - `SearchRoute` added to Routes.kt; `SearchRoot` wired in AppNavGraph
+  - `SearchViewModel` added to presentationModule
+  - HomeScreen search bar converted from editable TextField to tap-to-navigate button (SearchBarButton) — `onNavigateToSearch` callback on HomeRoot/HomeScreen
+  - HomeViewModel cleaned up: removed `searchQuery` state, `OnSearchQueryChange`/`OnSearchSubmit` actions, `searchRuns()`/`applyFilters()` methods
+  - User search reusable for rival flow (Task 7.1) via `UserRepository` + `SearchScreen` with PEOPLE tab
+  - iOS: SearchRoot + UserRepository stub — verify on Mac before PR
+  - Build verified: `./gradlew :androidApp:assembleDebug` + `:composeApp:testDebugUnitTest` — BUILD SUCCESSFUL
 
 ---
 

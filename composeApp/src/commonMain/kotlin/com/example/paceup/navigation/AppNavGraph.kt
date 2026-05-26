@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.paceup.feature.home.HomeRoot
 import com.example.paceup.feature.rundetail.RunDetailRoot
+import com.example.paceup.feature.search.SearchRoot
 import com.example.paceup.feature.login.LoginRoot
 import com.example.paceup.feature.signup.EmailVerificationRoot
 import com.example.paceup.feature.signup.SignUpRoot
@@ -98,6 +99,13 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
             }
         )
     }
+    composable<SearchRoute> {
+        SearchRoot(
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToRunDetail = { runId -> navController.navigate(RunDetailRoute(runId)) },
+            onNavigateToUserProfile = { userId -> navController.navigate(UserProfileRoute(userId)) },
+        )
+    }
     composable<HomeRoute> {
         HomeRoot(
             onNavigateToRunDetail = { runId ->
@@ -105,6 +113,9 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
             },
             onNavigateToCreateRun = {
                 navController.navigate(CreateRunRoute)
+            },
+            onNavigateToSearch = {
+                navController.navigate(SearchRoute)
             },
         )
     }
