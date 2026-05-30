@@ -334,20 +334,20 @@ private fun Step2DateTime(state: CreateRunState, onAction: (CreateRunAction) -> 
 
     FormField(
         label = "Date",
-        placeholder = "YYYY-MM-DD  (e.g. 2026-06-15)",
+        placeholder = "YYYY-MM-DD  (type 8 digits)",
         value = state.scheduledDate,
         keyboardType = KeyboardType.Number,
-        onValueChange = { onAction(CreateRunAction.OnDateChanged(it)) },
+        onValueChange = { onAction(CreateRunAction.OnDateChanged(autoFormatDate(it))) },
     )
 
     Spacer(Modifier.height(12.dp))
 
     FormField(
         label = "Start time",
-        placeholder = "HH:MM  (24-hour, e.g. 06:30)",
+        placeholder = "HH:MM  (type 4 digits, 24-hour)",
         value = state.scheduledTime,
         keyboardType = KeyboardType.Number,
-        onValueChange = { onAction(CreateRunAction.OnTimeChanged(it)) },
+        onValueChange = { onAction(CreateRunAction.OnTimeChanged(autoFormatTime(it))) },
     )
 }
 
@@ -393,7 +393,7 @@ private fun Step3Location(state: CreateRunState, onAction: (CreateRunAction) -> 
             placeholder = "e.g. 32.08",
             value = state.meetingLatText,
             keyboardType = KeyboardType.Decimal,
-            onValueChange = { onAction(CreateRunAction.OnLatChanged(it)) },
+            onValueChange = { onAction(CreateRunAction.OnLatChanged(filterCoordinate(it))) },
             modifier = Modifier.weight(1f),
         )
         FormField(
@@ -401,7 +401,7 @@ private fun Step3Location(state: CreateRunState, onAction: (CreateRunAction) -> 
             placeholder = "e.g. 34.78",
             value = state.meetingLngText,
             keyboardType = KeyboardType.Decimal,
-            onValueChange = { onAction(CreateRunAction.OnLngChanged(it)) },
+            onValueChange = { onAction(CreateRunAction.OnLngChanged(filterCoordinate(it))) },
             modifier = Modifier.weight(1f),
         )
     }
@@ -452,7 +452,7 @@ private fun Step4Details(state: CreateRunState, onAction: (CreateRunAction) -> U
             placeholder = "e.g. 10",
             value = state.distanceKmText,
             keyboardType = KeyboardType.Decimal,
-            onValueChange = { onAction(CreateRunAction.OnDistanceChanged(it)) },
+            onValueChange = { onAction(CreateRunAction.OnDistanceChanged(filterDecimal(it))) },
             modifier = Modifier.weight(1f),
         )
         FormField(
@@ -460,7 +460,7 @@ private fun Step4Details(state: CreateRunState, onAction: (CreateRunAction) -> U
             placeholder = "e.g. 60",
             value = state.durationMinText,
             keyboardType = KeyboardType.Number,
-            onValueChange = { onAction(CreateRunAction.OnDurationChanged(it)) },
+            onValueChange = { onAction(CreateRunAction.OnDurationChanged(filterDigits(it))) },
             modifier = Modifier.weight(1f),
         )
     }
@@ -538,7 +538,7 @@ private fun Step5Filters(state: CreateRunState, onAction: (CreateRunAction) -> U
         placeholder = "e.g. 10 (leave blank for unlimited)",
         value = state.maxParticipantsText,
         keyboardType = KeyboardType.Number,
-        onValueChange = { onAction(CreateRunAction.OnMaxParticipantsChanged(it)) },
+        onValueChange = { onAction(CreateRunAction.OnMaxParticipantsChanged(filterDigits(it))) },
     )
 
     Spacer(Modifier.height(12.dp))
@@ -549,7 +549,7 @@ private fun Step5Filters(state: CreateRunState, onAction: (CreateRunAction) -> U
             placeholder = "e.g. 18",
             value = state.ageMinText,
             keyboardType = KeyboardType.Number,
-            onValueChange = { onAction(CreateRunAction.OnAgeMinChanged(it)) },
+            onValueChange = { onAction(CreateRunAction.OnAgeMinChanged(filterDigits(it))) },
             modifier = Modifier.weight(1f),
         )
         FormField(
@@ -557,7 +557,7 @@ private fun Step5Filters(state: CreateRunState, onAction: (CreateRunAction) -> U
             placeholder = "e.g. 50",
             value = state.ageMaxText,
             keyboardType = KeyboardType.Number,
-            onValueChange = { onAction(CreateRunAction.OnAgeMaxChanged(it)) },
+            onValueChange = { onAction(CreateRunAction.OnAgeMaxChanged(filterDigits(it))) },
             modifier = Modifier.weight(1f),
         )
     }
@@ -943,4 +943,47 @@ private fun ReviewRow(label: String, value: String) {
 @Composable
 private fun ReviewDivider() {
     HorizontalDivider(color = Divider, thickness = 0.5.dp)
+}
+
+// ── Input filters & auto-formatters ──────────────────────────────────────────
+
+/** Strips non-digit characters and auto-inserts hyphens: "20260615" → "2026-06-15". */
+private fun autoFormatDate(input: String): String {
+    val digits = input.filter { it.isDigit() }.take(8)
+    return when {
+        digits.length <= 4 -> digits
+        digits.length <= 6 -> "${digits.take(4)}-${digits.drop(4)}"
+        else -> "${digits.take(4)}-${digits.drop(4).take(2)}-${digits.drop(6)}"
+    }
+}
+
+/** Strips non-digit characters and auto-inserts colon: "0630" → "06:30". */
+private fun autoFormatTime(input: String): String {
+    val digits = input.filter { it.isDigit() }.take(4)
+    return when {
+        digits.length <= 2 -> digits
+        else -> "${digits.take(2)}:${digits.drop(2)}"
+    }
+}
+
+/** Allows only digits, a single leading minus, and a single decimal point. */
+private fun filterCoordinate(input: String): String {
+    val hasLeadingMinus = input.startsWith("-")
+    val digits = input.filter { it.isDigit() || it == '.' }
+    val singleDot = digits.let {
+        val dotIndex = it.indexOf('.')
+        if (dotIndex == -1) it else it.take(dotIndex + 1) + it.drop(dotIndex + 1).filter { c -> c != '.' }
+    }
+    return if (hasLeadingMinus) "-$singleDot" else singleDot
+}
+
+/** Allows only digits (0–9). */
+private fun filterDigits(input: String): String = input.filter { it.isDigit() }
+
+/** Allows only digits and a single decimal point. */
+private fun filterDecimal(input: String): String {
+    val digits = input.filter { it.isDigit() || it == '.' }
+    val dotIndex = digits.indexOf('.')
+    return if (dotIndex == -1) digits
+    else digits.take(dotIndex + 1) + digits.drop(dotIndex + 1).filter { it.isDigit() }
 }
