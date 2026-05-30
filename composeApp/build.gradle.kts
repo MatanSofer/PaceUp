@@ -50,6 +50,7 @@ kotlin {
             implementation(project(":shared:auth"))
             implementation(project(":shared:paceZone"))
             implementation(project(":shared:runMatching"))
+            implementation(project(":shared:notifications"))
             implementation(libs.compose.navigation)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.coil.compose)

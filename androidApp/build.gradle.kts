@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.googleServices)
 }
 
 kotlin {
@@ -21,9 +22,13 @@ kotlin {
             implementation(project(":shared:network"))
             implementation(project(":shared:database"))
             implementation(project(":shared:auth"))
+            implementation(project(":shared:notifications"))
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
             implementation(libs.androidx.core.ktx)
+            // Firebase — version managed by BOM
+            implementation(platform(libs.firebase.bom))
+            implementation(libs.firebase.messaging)
         }
     }
 }
