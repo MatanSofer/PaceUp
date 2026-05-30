@@ -838,7 +838,17 @@ MapDiscoveryState(
 
 **Post-MVP modes deferred:** tourist, pacer, race_prep, recurring
 
-- [ ] Done
+- [x] Done
+  - `CreateRunState`, `CreateRunAction`, `CreateRunEvent`, `CreateRunViewModel` in `feature/createrun/`
+  - `CreateRunViewModel` injects `RunRepository` (for `createRun`) + `AuthRepository` (for `getCurrentUser` as creatorId)
+  - 7-step MVI state machine with per-step validation — mode, date/time, location, details, filters, join mode, review
+  - Pace range via dual Sliders (210–480 sec/km = 3:30–8:00 /km)
+  - Location: address + city + lat/lng text fields (map picker deferred, TODO added per plan)
+  - `CreateRunRoot` + `CreateRunScreen` composables — dark theme, step progress bar, per-step forms
+  - `CreateRunRoute` in AppNavGraph replaced from stub to `CreateRunRoot` (on success navigates to RunDetailRoute)
+  - `CreateRunViewModel` added to `presentationModule`
+  - MVP modes: EASY, TEMPO, RECOVERY — post-MVP (TOURIST, PACER, RACE_PREP) deferred
+  - Build verified: `./gradlew :androidApp:assembleDebug` + `:composeApp:testDebugUnitTest` — BUILD SUCCESSFUL
 
 ---
 
