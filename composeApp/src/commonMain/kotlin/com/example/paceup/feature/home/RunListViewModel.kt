@@ -167,7 +167,7 @@ class RunListViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             val center = _state.value.userLocation ?: DefaultMapCenter
-            val proximity = _state.value.filters.proximityKm ?: 20.0
+            val proximity = _state.value.filters.proximityKm ?: 50.0
             val runFilters = _state.value.filters.toRunFilters()
 
             when (val result = runRepository.getRunsNearLocation(

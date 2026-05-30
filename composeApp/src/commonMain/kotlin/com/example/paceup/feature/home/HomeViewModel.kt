@@ -115,7 +115,7 @@ class HomeViewModel(
             when (val result = runRepository.getRunsNearLocation(
                 lat = center.lat,
                 lng = center.lng,
-                radiusKm = 20.0,
+                radiusKm = 50.0,
                 filters = filters,
             )) {
                 is Result.Success -> _state.update {

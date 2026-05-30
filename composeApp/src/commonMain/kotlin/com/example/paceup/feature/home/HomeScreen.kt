@@ -32,6 +32,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,8 +45,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.paceup.platform.LocationEffect
+import kotlinx.coroutines.launch
 import com.example.paceup.platform.PaceUpMap
 import com.example.paceup.shared.runmatching.domain.RunMode
 import com.example.paceup.ui.ObserveAsEvents
@@ -101,6 +106,16 @@ fun HomeRoot(
     LocationEffect { latLng ->
         mapViewModel.onAction(HomeAction.OnLocationUpdate(latLng))
         listViewModel.onAction(RunListAction.OnLocationUpdate(latLng))
+    }
+
+    // Re-fetch runs every time this screen becomes the active destination (e.g. navigating back
+    // from CreateRun → RunDetail → Home). repeatOnLifecycle fires on every RESUMED transition.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            launch { mapViewModel.onAction(HomeAction.OnRefresh) }
+            launch { listViewModel.onAction(RunListAction.OnRefresh) }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
