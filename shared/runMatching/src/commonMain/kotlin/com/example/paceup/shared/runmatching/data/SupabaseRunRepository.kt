@@ -119,7 +119,7 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
         AppLogger.d(TAG, "createRun mode=${params.mode.value} creator=${params.creatorId}")
         return runCatching {
             supabase.postgrest[TABLE]
-                .insert(params.toDto())
+                .insert(params.toDto()) { select() }
                 .decodeSingle<RunDto>()
                 .toDomain()
         }.fold(
