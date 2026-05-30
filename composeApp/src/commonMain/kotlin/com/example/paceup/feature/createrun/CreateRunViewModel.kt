@@ -33,6 +33,8 @@ data class CreateRunState(
     val city: String = "",
     val meetingLatText: String = "",
     val meetingLngText: String = "",
+    /** True once the first GPS fix has been applied — prevents overwriting user edits. */
+    val gpsLoaded: Boolean = false,
 
     // Step 4 — Run details
     val title: String = "",
@@ -88,6 +90,9 @@ sealed interface CreateRunAction {
     data class OnGenderFilterChanged(val value: String) : CreateRunAction
     data object OnVerifiedOnlyToggled : CreateRunAction
 
+    // Step 3 — GPS auto-fill (fires once when LocationEffect delivers device coords)
+    data class OnGpsLocationReceived(val lat: Double, val lng: Double) : CreateRunAction
+
     // Step 6
     data class OnJoinModeChanged(val mode: String) : CreateRunAction
 
@@ -136,6 +141,17 @@ class CreateRunViewModel(
             is CreateRunAction.OnAgeMaxChanged -> _state.update { it.copy(ageMaxText = action.value) }
             is CreateRunAction.OnGenderFilterChanged -> _state.update { it.copy(genderFilter = action.value) }
             CreateRunAction.OnVerifiedOnlyToggled -> _state.update { it.copy(verifiedOnly = !it.verifiedOnly) }
+            is CreateRunAction.OnGpsLocationReceived -> {
+                if (!_state.value.gpsLoaded) {
+                    _state.update {
+                        it.copy(
+                            meetingLatText = "%.6f".format(action.lat),
+                            meetingLngText = "%.6f".format(action.lng),
+                            gpsLoaded = true,
+                        )
+                    }
+                }
+            }
             is CreateRunAction.OnJoinModeChanged -> _state.update { it.copy(joinMode = action.mode) }
             CreateRunAction.OnNextStep -> advanceStep()
             CreateRunAction.OnPreviousStep -> goBackStep()
@@ -170,30 +186,103 @@ class CreateRunViewModel(
 
     private fun validateStep(s: CreateRunState): UiText? = when (s.step) {
         1 -> if (s.selectedMode == null) UiText.DynamicString("Select a run mode to continue") else null
-        2 -> when {
-            s.scheduledDate.isBlank() -> UiText.DynamicString("Enter the run date")
-            s.scheduledTime.isBlank() -> UiText.DynamicString("Enter the run time")
-            else -> null
-        }
-        3 -> when {
-            s.meetingAddress.isBlank() -> UiText.DynamicString("Enter the meeting address")
-            s.city.isBlank() -> UiText.DynamicString("Enter the city")
-            s.meetingLatText.toDoubleOrNull() == null -> UiText.DynamicString("Enter a valid latitude (e.g. 32.08)")
-            s.meetingLngText.toDoubleOrNull() == null -> UiText.DynamicString("Enter a valid longitude (e.g. 34.78)")
-            else -> null
-        }
-        4 -> when {
-            s.distanceKmText.isBlank() && s.durationMinText.isBlank() ->
-                UiText.DynamicString("Enter a distance or duration")
-            s.distanceKmText.isNotBlank() && s.distanceKmText.toFloatOrNull() == null ->
-                UiText.DynamicString("Invalid distance value")
-            s.durationMinText.isNotBlank() && s.durationMinText.toIntOrNull() == null ->
-                UiText.DynamicString("Invalid duration value")
-            s.paceMinSec >= s.paceMaxSec ->
-                UiText.DynamicString("Pace min must be slower than pace max")
-            else -> null
-        }
+
+        2 -> validateDateTime(s.scheduledDate, s.scheduledTime)
+
+        3 -> validateLocation(s)
+
+        4 -> validateDetails(s)
+
+        5 -> validateFilters(s)
+
         else -> null
+    }
+
+    private fun validateDateTime(date: String, time: String): UiText? {
+        if (date.isBlank()) return UiText.DynamicString("Enter the run date (YYYY-MM-DD)")
+        val dateParts = date.split("-")
+        if (dateParts.size != 3 || dateParts.any { it.toIntOrNull() == null }) {
+            return UiText.DynamicString("Date must be in YYYY-MM-DD format (e.g. 2026-06-15)")
+        }
+        val (year, month, day) = dateParts.map { it.toInt() }
+        if (year < 2026) return UiText.DynamicString("Year must be 2026 or later")
+        if (month !in 1..12) return UiText.DynamicString("Month must be between 01 and 12")
+        if (day !in 1..31) return UiText.DynamicString("Day must be between 01 and 31")
+
+        if (time.isBlank()) return UiText.DynamicString("Enter the run time (HH:MM)")
+        val timeParts = time.split(":")
+        if (timeParts.size != 2 || timeParts.any { it.toIntOrNull() == null }) {
+            return UiText.DynamicString("Time must be in HH:MM format (e.g. 06:30)")
+        }
+        val (hour, minute) = timeParts.map { it.toInt() }
+        if (hour !in 0..23) return UiText.DynamicString("Hour must be between 00 and 23")
+        if (minute !in 0..59) return UiText.DynamicString("Minute must be between 00 and 59")
+
+        return null
+    }
+
+    private fun validateLocation(s: CreateRunState): UiText? {
+        if (s.meetingAddress.isBlank()) return UiText.DynamicString("Enter the meeting address")
+        if (s.city.isBlank()) return UiText.DynamicString("Enter the city")
+
+        val lat = s.meetingLatText.toDoubleOrNull()
+            ?: return UiText.DynamicString("Latitude must be a number (e.g. 32.08)")
+        if (lat !in -90.0..90.0) return UiText.DynamicString("Latitude must be between -90 and 90")
+
+        val lng = s.meetingLngText.toDoubleOrNull()
+            ?: return UiText.DynamicString("Longitude must be a number (e.g. 34.78)")
+        if (lng !in -180.0..180.0) return UiText.DynamicString("Longitude must be between -180 and 180")
+
+        return null
+    }
+
+    private fun validateDetails(s: CreateRunState): UiText? {
+        if (s.distanceKmText.isBlank() && s.durationMinText.isBlank()) {
+            return UiText.DynamicString("Enter a distance or duration")
+        }
+        if (s.distanceKmText.isNotBlank()) {
+            val km = s.distanceKmText.toFloatOrNull()
+                ?: return UiText.DynamicString("Distance must be a number (e.g. 10)")
+            if (km <= 0f) return UiText.DynamicString("Distance must be greater than 0")
+            if (km > 200f) return UiText.DynamicString("Distance must be 200 km or less")
+        }
+        if (s.durationMinText.isNotBlank()) {
+            val min = s.durationMinText.toIntOrNull()
+                ?: return UiText.DynamicString("Duration must be a whole number of minutes (e.g. 60)")
+            if (min <= 0) return UiText.DynamicString("Duration must be greater than 0")
+            if (min > 720) return UiText.DynamicString("Duration must be 720 minutes (12 hours) or less")
+        }
+        if (s.paceMinSec >= s.paceMaxSec) {
+            return UiText.DynamicString("Min pace must be faster than max pace — move the top slider left")
+        }
+        return null
+    }
+
+    private fun validateFilters(s: CreateRunState): UiText? {
+        if (s.maxParticipantsText.isNotBlank()) {
+            val max = s.maxParticipantsText.toIntOrNull()
+                ?: return UiText.DynamicString("Max participants must be a whole number (e.g. 10)")
+            if (max < 2) return UiText.DynamicString("Max participants must be at least 2")
+            if (max > 500) return UiText.DynamicString("Max participants must be 500 or less")
+        }
+        val ageMin = s.ageMinText.toIntOrNull()
+        val ageMax = s.ageMaxText.toIntOrNull()
+        if (s.ageMinText.isNotBlank() && ageMin == null) {
+            return UiText.DynamicString("Min age must be a whole number (e.g. 18)")
+        }
+        if (s.ageMaxText.isNotBlank() && ageMax == null) {
+            return UiText.DynamicString("Max age must be a whole number (e.g. 60)")
+        }
+        if (ageMin != null && ageMin !in 1..120) {
+            return UiText.DynamicString("Min age must be between 1 and 120")
+        }
+        if (ageMax != null && ageMax !in 1..120) {
+            return UiText.DynamicString("Max age must be between 1 and 120")
+        }
+        if (ageMin != null && ageMax != null && ageMin >= ageMax) {
+            return UiText.DynamicString("Min age must be less than max age")
+        }
+        return null
     }
 
     private fun createRun() {

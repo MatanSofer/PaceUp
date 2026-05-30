@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.paceup.feature.home.formatPaceRange
+import com.example.paceup.platform.LocationEffect
 import com.example.paceup.shared.runmatching.domain.RunMode
 import com.example.paceup.ui.ObserveAsEvents
 import com.example.paceup.ui.asString
@@ -333,7 +334,7 @@ private fun Step2DateTime(state: CreateRunState, onAction: (CreateRunAction) -> 
 
     FormField(
         label = "Date",
-        placeholder = "YYYY-MM-DD",
+        placeholder = "YYYY-MM-DD  (e.g. 2026-06-15)",
         value = state.scheduledDate,
         keyboardType = KeyboardType.Number,
         onValueChange = { onAction(CreateRunAction.OnDateChanged(it)) },
@@ -354,6 +355,13 @@ private fun Step2DateTime(state: CreateRunState, onAction: (CreateRunAction) -> 
 
 @Composable
 private fun Step3Location(state: CreateRunState, onAction: (CreateRunAction) -> Unit) {
+    // Auto-fill lat/lng once from device GPS — no-ops if permission not granted
+    if (!state.gpsLoaded) {
+        LocationEffect { latLng ->
+            onAction(CreateRunAction.OnGpsLocationReceived(latLng.lat, latLng.lng))
+        }
+    }
+
     StepHeader(
         title = "Where do you meet?",
         subtitle = "Enter the meeting point address and coordinates.",
@@ -382,7 +390,7 @@ private fun Step3Location(state: CreateRunState, onAction: (CreateRunAction) -> 
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         FormField(
             label = "Latitude",
-            placeholder = "32.08",
+            placeholder = "e.g. 32.08",
             value = state.meetingLatText,
             keyboardType = KeyboardType.Decimal,
             onValueChange = { onAction(CreateRunAction.OnLatChanged(it)) },
@@ -390,7 +398,7 @@ private fun Step3Location(state: CreateRunState, onAction: (CreateRunAction) -> 
         )
         FormField(
             label = "Longitude",
-            placeholder = "34.78",
+            placeholder = "e.g. 34.78",
             value = state.meetingLngText,
             keyboardType = KeyboardType.Decimal,
             onValueChange = { onAction(CreateRunAction.OnLngChanged(it)) },
@@ -400,8 +408,12 @@ private fun Step3Location(state: CreateRunState, onAction: (CreateRunAction) -> 
 
     Spacer(Modifier.height(12.dp))
 
+    val gpsNote = if (state.gpsLoaded)
+        "Your current location was filled in automatically. Adjust if your meeting point is different."
+    else
+        "Tip: open Google Maps, long-press your meeting point, and copy the coordinates shown."
     // TODO(paceup): replace lat/lng text input with map picker (Task post-MVP)
-    InfoNote(text = "Tip: open Google Maps, long-press your meeting point, and copy the coordinates shown.")
+    InfoNote(text = gpsNote)
 }
 
 // ── Step 4 — Run details ──────────────────────────────────────────────────────
