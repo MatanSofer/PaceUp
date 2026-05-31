@@ -3,7 +3,11 @@ package com.example.paceup.di
 import com.example.paceup.feature.appversion.AppVersionRepository
 import com.example.paceup.feature.appversion.AppVersionViewModel
 import com.example.paceup.feature.appversion.SupabaseAppVersionRepository
+import com.example.paceup.feature.createrun.CreateRunViewModel
 import com.example.paceup.feature.home.HomeViewModel
+import com.example.paceup.feature.home.RunListViewModel
+import com.example.paceup.feature.search.SearchViewModel
+import com.example.paceup.feature.rundetail.RunDetailViewModel
 import com.example.paceup.feature.login.LoginViewModel
 import com.example.paceup.feature.signup.SignUpViewModel
 import com.example.paceup.feature.locationpermission.LocationPermissionViewModel
@@ -25,7 +29,11 @@ val presentationModule: Module = module {
     viewModelOf(::LocationPermissionViewModel)
     viewModelOf(::NotificationPermissionViewModel)
     viewModelOf(::ProfileSetupViewModel)
-    viewModelOf(::HomeViewModel)
+    viewModelOf(::HomeViewModel) // RunRepository injected automatically
+    viewModelOf(::RunListViewModel)
+    viewModelOf(::RunDetailViewModel)
+    viewModelOf(::SearchViewModel) // RunRepository + UserRepository injected automatically
+    viewModelOf(::CreateRunViewModel) // RunRepository + AuthRepository injected automatically
     single<AppVersionRepository> { SupabaseAppVersionRepository(get()) }
     viewModel { (appVersion: String) -> AppVersionViewModel(get(), appVersion) }
 }

@@ -10,7 +10,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.paceup.feature.createrun.CreateRunRoot
 import com.example.paceup.feature.home.HomeRoot
+import com.example.paceup.feature.rundetail.RunDetailRoot
+import com.example.paceup.feature.search.SearchRoot
 import com.example.paceup.feature.login.LoginRoot
 import com.example.paceup.feature.signup.EmailVerificationRoot
 import com.example.paceup.feature.signup.SignUpRoot
@@ -97,15 +100,38 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
             }
         )
     }
-    composable<HomeRoute> {
-        HomeRoot()
+    composable<SearchRoute> {
+        SearchRoot(
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToRunDetail = { runId -> navController.navigate(RunDetailRoute(runId)) },
+            onNavigateToUserProfile = { userId -> navController.navigate(UserProfileRoute(userId)) },
+        )
     }
-    composable<RunDetailRoute> { backStackEntry ->
-        val route: RunDetailRoute = backStackEntry.toRoute()
-        StubScreen("Run Detail — ${route.runId}")
+    composable<HomeRoute> {
+        HomeRoot(
+            onNavigateToRunDetail = { runId ->
+                navController.navigate(RunDetailRoute(runId))
+            },
+            onNavigateToCreateRun = {
+                navController.navigate(CreateRunRoute)
+            },
+            onNavigateToSearch = {
+                navController.navigate(SearchRoute)
+            },
+        )
+    }
+    composable<RunDetailRoute> {
+        RunDetailRoot(onNavigateBack = { navController.popBackStack() })
     }
     composable<CreateRunRoute> {
-        StubScreen("Create Run")
+        CreateRunRoot(
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToRunDetail = { runId ->
+                navController.navigate(RunDetailRoute(runId)) {
+                    popUpTo<CreateRunRoute> { inclusive = true }
+                }
+            },
+        )
     }
     composable<UserProfileRoute> { backStackEntry ->
         val route: UserProfileRoute = backStackEntry.toRoute()

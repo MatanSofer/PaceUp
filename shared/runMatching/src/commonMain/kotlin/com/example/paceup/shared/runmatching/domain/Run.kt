@@ -51,9 +51,16 @@ data class Run(
     val paceMinSec: Int,
     val paceMaxSec: Int,
     val maxParticipants: Int?,
+    val ageMin: Int? = null,
+    val ageMax: Int? = null,
+    /** Gender filter: "any" | "male" | "female". */
+    val genderFilter: String = "any",
     val verifiedOnly: Boolean,
     val joinMode: String,
     val isRecurring: Boolean,
+    /** "weekly" | "biweekly" — null for one-time runs. */
+    val recurrenceRule: String? = null,
+    val cancellationReason: String? = null,
     val createdAt: String,
 )
 
@@ -64,7 +71,11 @@ data class RunFilters(
     val modes: List<RunMode> = emptyList(),
     val verifiedOnly: Boolean? = null,
     val maxDistanceKm: Float? = null,
+    val minDistanceKm: Float? = null,
     val afterDate: String? = null,
+    val beforeDate: String? = null,
+    val openJoinOnly: Boolean? = null,
+    val recurringOnly: Boolean? = null,
 )
 
 /** Raw Supabase row shape for the `runs` table. */
@@ -86,9 +97,14 @@ internal data class RunDto(
     @SerialName("pace_min_sec") val paceMinSec: Int,
     @SerialName("pace_max_sec") val paceMaxSec: Int,
     @SerialName("max_participants") val maxParticipants: Int? = null,
+    @SerialName("age_min") val ageMin: Int? = null,
+    @SerialName("age_max") val ageMax: Int? = null,
+    @SerialName("gender_filter") val genderFilter: String = "any",
     @SerialName("verified_only") val verifiedOnly: Boolean,
     @SerialName("join_mode") val joinMode: String,
     @SerialName("is_recurring") val isRecurring: Boolean,
+    @SerialName("recurrence_rule") val recurrenceRule: String? = null,
+    @SerialName("cancellation_reason") val cancellationReason: String? = null,
     @SerialName("created_at") val createdAt: String,
 )
 
@@ -109,8 +125,13 @@ internal fun RunDto.toDomain() = Run(
     paceMinSec = paceMinSec,
     paceMaxSec = paceMaxSec,
     maxParticipants = maxParticipants,
+    ageMin = ageMin,
+    ageMax = ageMax,
+    genderFilter = genderFilter,
     verifiedOnly = verifiedOnly,
     joinMode = joinMode,
     isRecurring = isRecurring,
+    recurrenceRule = recurrenceRule,
+    cancellationReason = cancellationReason,
     createdAt = createdAt,
 )

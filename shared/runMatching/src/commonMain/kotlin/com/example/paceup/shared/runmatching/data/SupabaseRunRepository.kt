@@ -4,9 +4,11 @@ import com.example.paceup.shared.network.error.AppError
 import com.example.paceup.shared.network.error.RunError
 import com.example.paceup.shared.network.logger.AppLogger
 import com.example.paceup.shared.network.result.Result
+import com.example.paceup.shared.runmatching.domain.CreateRunParams
 import com.example.paceup.shared.runmatching.domain.Run
 import com.example.paceup.shared.runmatching.domain.RunDto
 import com.example.paceup.shared.runmatching.domain.RunFilters
+import com.example.paceup.shared.runmatching.domain.RunParticipant
 import com.example.paceup.shared.runmatching.domain.RunRepository
 import com.example.paceup.shared.runmatching.domain.RunStatus
 import com.example.paceup.shared.runmatching.domain.toDomain
@@ -113,6 +115,22 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
         )
     }
 
+    override suspend fun createRun(params: CreateRunParams): Result<Run, AppError> {
+        AppLogger.d(TAG, "createRun mode=${params.mode.value} creator=${params.creatorId}")
+        return runCatching {
+            supabase.postgrest[TABLE]
+                .insert(params.toDto()) { select() }
+                .decodeSingle<RunDto>()
+                .toDomain()
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "createRun failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
     override suspend fun searchRuns(
         query: String,
         filters: RunFilters,
@@ -132,7 +150,7 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
                             }
                         }
                     }
-                    limit(100)
+                    limit(50)
                 }
                 .decodeList<RunDto>()
 
@@ -141,6 +159,27 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
             onSuccess = { Result.Success(it) },
             onFailure = { e ->
                 AppLogger.e(TAG, "searchRuns failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
+    override suspend fun getRunParticipants(runId: String): Result<List<RunParticipant>, AppError> {
+        AppLogger.d(TAG, "getRunParticipants runId=$runId")
+        return runCatching {
+            supabase.postgrest["run_participants"]
+                .select(Columns.raw("user_id, status, users(id, display_name, avatar_url, pace_zone, show_up_rate)")) {
+                    filter {
+                        eq("run_id", runId)
+                        eq("status", "accepted")
+                    }
+                }
+                .decodeList<RunParticipantDto>()
+                .map { it.toDomain() }
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "getRunParticipants failed: ${e.message}")
                 Result.Error(RunError.NETWORK_ERROR)
             }
         )
@@ -163,7 +202,11 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
                 (filters.paceMaxSec == null || run.paceMinSec <= filters.paceMaxSec) &&
                 (filters.modes.isEmpty() || run.mode in filters.modes) &&
                 (filters.verifiedOnly == null || run.verifiedOnly == filters.verifiedOnly) &&
-                (filters.afterDate == null || run.scheduledAt >= filters.afterDate)
+                (filters.afterDate == null || run.scheduledAt >= filters.afterDate) &&
+                (filters.beforeDate == null || run.scheduledAt <= filters.beforeDate) &&
+                (filters.minDistanceKm == null || (run.distanceKm != null && run.distanceKm >= filters.minDistanceKm)) &&
+                (filters.openJoinOnly != true || run.joinMode == "open") &&
+                (filters.recurringOnly != true || run.isRecurring)
         }
     }
 

@@ -47,8 +47,18 @@ compose-navigation = "2.9.2"
 # Coil
 coil = "3.1.0"
 
+# Google Maps
+maps-compose = "4.4.1"
+
 # KtLint
 ktlint = "12.1.2"
+
+# DateTime
+kotlinx-datetime = "0.6.2"
+
+# Firebase
+firebase-bom = "33.15.0"
+google-services = "4.4.2"
 
 [libraries]
 # Kotlin
@@ -119,6 +129,16 @@ compose-navigation = { module = "org.jetbrains.androidx.navigation:navigation-co
 coil-compose  = { module = "io.coil-kt.coil3:coil-compose",       version.ref = "coil" }
 coil-network  = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
+# Google Maps
+maps-compose  = { module = "com.google.maps.android:maps-compose", version.ref = "maps-compose" }
+
+# DateTime
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+
+# Firebase
+firebase-bom      = { module = "com.google.firebase:firebase-bom",           version.ref = "firebase-bom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
+
 [plugins]
 androidApplication   = { id = "com.android.application",                         version.ref = "agp" }
 androidLibrary       = { id = "com.android.library",                              version.ref = "agp" }
@@ -128,3 +148,4 @@ kotlinMultiplatform  = { id = "org.jetbrains.kotlin.multiplatform",             
 kotlinSerialization  = { id = "org.jetbrains.kotlin.plugin.serialization",        version.ref = "kotlin" }
 sqldelight           = { id = "app.cash.sqldelight",                              version.ref = "sqldelight" }
 ktlint               = { id = "org.jlleitschuh.gradle.ktlint",                    version.ref = "ktlint" }
+googleServices       = { id = "com.google.gms.google-services",                   version.ref = "google-services" }

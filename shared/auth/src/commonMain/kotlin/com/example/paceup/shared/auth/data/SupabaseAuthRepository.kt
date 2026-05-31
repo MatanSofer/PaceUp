@@ -12,6 +12,10 @@ import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.exceptions.RestException
+import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /** [AuthRepository] backed by Supabase Auth. Session is managed by the Supabase SDK. */
 class SupabaseAuthRepository(private val client: SupabaseClient) : AuthRepository {
@@ -86,6 +90,19 @@ class SupabaseAuthRepository(private val client: SupabaseClient) : AuthRepositor
     override suspend fun signOut(): EmptyResult<AuthError> {
         AppLogger.d(TAG, "signOut enter")
         return try {
+            // Clear push token before signing out so the device no longer receives notifications (spec §6.4)
+            runCatching {
+                val userId = client.auth.currentUserOrNull()?.id
+                if (userId != null) {
+                    val row = buildJsonObject {
+                        put("id", userId)
+                        put("push_token", JsonNull)
+                    }
+                    client.postgrest["users"].upsert(row)
+                    AppLogger.i(TAG, "push_token cleared for $userId")
+                }
+            }.onFailure { e -> AppLogger.w(TAG, "push_token clear failed (non-fatal): ${e.message}") }
+
             client.auth.signOut(SignOutScope.LOCAL)
             AppLogger.i(TAG, "signOut success")
             Result.Success(Unit)

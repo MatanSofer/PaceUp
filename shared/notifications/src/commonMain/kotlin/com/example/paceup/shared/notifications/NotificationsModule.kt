@@ -1,4 +1,9 @@
 package com.example.paceup.shared.notifications
 
-// TODO(paceup): implement notification scheduling logic in Task 8.1
-internal object NotificationsModule
+import io.github.jan.supabase.SupabaseClient
+import org.koin.dsl.module
+
+/** Koin bindings for push-notification infrastructure. */
+val notificationsModule = module {
+    single<NotificationRepository> { SupabaseNotificationRepository(get<SupabaseClient>()) }
+}

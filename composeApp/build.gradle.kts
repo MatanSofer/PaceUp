@@ -29,6 +29,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.maps.compose)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -49,10 +50,12 @@ kotlin {
             implementation(project(":shared:auth"))
             implementation(project(":shared:paceZone"))
             implementation(project(":shared:runMatching"))
+            implementation(project(":shared:notifications"))
             implementation(libs.compose.navigation)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.coil.compose)
             implementation(libs.coil.network)
+            implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
