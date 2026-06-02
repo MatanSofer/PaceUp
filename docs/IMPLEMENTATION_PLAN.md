@@ -859,7 +859,11 @@ MapDiscoveryState(
 - **Dependencies:** Task 4.1, Task 1.2
 - **Deliverable:** Edge Function deployed. Creating a run triggers notifications to matching users within radius.
 
-- [ ] Done
+- [x] Done
+  - pg_net 0.20.0 enabled on Supabase
+  - Postgres trigger `on_run_created_smart_invite` (AFTER INSERT on runs) → calls Edge Function via pg_net async HTTP
+  - `smart_invite` Edge Function deployed and ACTIVE: haversine proximity filter (50km, JS), pace range match, verified_only support, 200-invite cap, idempotent deduplication
+  - Notification rows created in `notifications` table → picked up by `notification_dispatcher`
 
 ---
 
@@ -887,7 +891,14 @@ suspend fun cancelParticipation(runId: String): Result<Unit, AppError>
 fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 ```
 
-- [ ] Done
+- [x] Done
+  - `joinRun`, `requestToJoin`, `acceptParticipant`, `declineParticipant`, `cancelParticipation`, `observeParticipants` added to `RunRepository` interface
+  - `JoinRunDto` + `UpdateParticipantStatusDto` in `shared/runMatching/…/data/`
+  - `SupabaseRunRepository` implements all 6 — `cancelParticipation` fetches the run, deletes row if >2h away (no penalty), sets `late_cancel` if ≤2h (spec §4.4)
+  - `supabase.auth` + `kotlinx.datetime` added to `shared/runMatching` deps
+  - `FakeRunRepository` updated with stubs for all new methods
+  - Pre-existing fixes: Firebase `platform()` moved out of KMP `sourceSets` block (Kotlin 2.3); `PaceUpFirebaseMessagingService` `SupervisorJob` cancel fixed
+  - Build verified: `./gradlew :androidApp:assembleDebug` + `:composeApp:testDebugUnitTest` — BUILD SUCCESSFUL
 
 ---
 
@@ -899,7 +910,14 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 - **Dependencies:** Task 5.1, Task 3.4
 - **Deliverable:** Join button works. Creator sees pending requests with pace zone, show-up rate, tags. Accept/decline functional. new_runner tier cannot join verified-only runs.
 
-- [ ] Done
+- [x] Done
+  - `RunDetailViewModel` fully rewritten with MVI: `RunDetailState`, `RunDetailAction`, `RunDetailEvent`
+  - `JoinStatus` enum: `NONE / REQUESTED / JOINED`
+  - `canJoin` computed from reputation tier + `verifiedOnly` flag (spec §4.4)
+  - `observeParticipants` used in place of `getRunParticipants` so creator sees all statuses
+  - `RunDetailScreen` updated: `JoinButton` handles all states; `PendingRequestsSection` for creator accept/decline
+  - `FakeAuthRepositoryForDetail`, `FakeUserRepository` created; `RunDetailViewModelTest` rewritten with 16 passing tests
+  - Build verified: `./gradlew :androidApp:assembleDebug` + `:composeApp:testDebugUnitTest` — BUILD SUCCESSFUL (55 tests pass)
 
 ---
 
@@ -911,7 +929,14 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 - **Dependencies:** Task 5.1
 - **Deliverable:** Cancel option on creator's run. Edge Function notifies all participants. Run hidden from discovery.
 
-- [ ] Done
+- [x] Done
+  - `cancelRun(runId, reason)` added to `RunRepository` + `SupabaseRunRepository` (PATCH status=cancelled + cancellation_reason on `runs` table)
+  - `CancelRunDto` added to `JoinRunDto.kt`
+  - `RunDetailViewModel`: `showCancelRunDialog`, `isCancellingRun`, `cancelRunError` state; `OnCancelRunClick`, `OnConfirmCancelRun`, `OnDismissCancelRunDialog`, `OnDismissCancelRunError` actions
+  - `RunDetailScreen`: `CreatorCancelButton` (red, hidden after cancellation) + `CancelRunDialog` (AlertDialog with optional reason field)
+  - `run_cancellation_notify` Edge Function deployed at `supabase/functions/run_cancellation_notify/index.ts`
+  - Postgres trigger SQL at `supabase/migrations/20260531_run_cancellation_trigger.sql`
+  - 5 new tests in `RunDetailViewModelTest` — BUILD SUCCESSFUL (60 tests pass)
 
 ---
 
@@ -925,7 +950,16 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 
 **Also deploy:** chat_cleanup Edge Function (deletes messages 48h after run end)
 
-- [ ] Done
+- [x] Done
+  - `ChatMessage` domain model + `ChatRepository` interface in `shared/runMatching/domain/`
+  - `ChatMessageDto`, `ChatMessageRealtimeDto`, `SendMessageDto` in `shared/runMatching/data/`
+  - `SupabaseChatRepository`: `getRecentMessages` (Postgrest), `observeNewMessages` (Realtime channel subscribe), `sendMessage` (Postgrest insert)
+  - Note: `filter =` DSL property is private in supabase-kt 3.1.4 — filtered in Kotlin Flow pipeline instead
+  - `RunChatViewModel` + `RunChatScreen`: message list with auto-scroll, empty state, offline/error banners, input bar with send button
+  - `ChatRepository` registered in `runMatchingModule`; `RunChatViewModel` in `presentationModule`
+  - `RunChatRoute(runId, runTitle)` added to navigation; linked from `RunDetailRoot` → chat button visible for accepted participant + creator
+  - `chat_cleanup` Edge Function + `get_stale_chat_run_ids` SQL helper at `supabase/migrations/`
+  - `FakeChatRepository` + `RunChatViewModelTest` (11 tests) — BUILD SUCCESSFUL
 
 ---
 
@@ -943,7 +977,14 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 - **Dependencies:** Task 1.1, Task 1.2
 - **Deliverable:** Own profile and other users' profiles render with all spec fields. Show-up rate color-coded. Pace zone badge prominent.
 
-- [ ] Done
+- [x] Done
+  - `UserProfile` domain model with all spec §4.1 fields: pace zone, avg pace, weekly mileage, longest run, show-up rate, total runs, unique partners, reputation tier, connected apps
+  - `getUserProfile(userId)` added to `UserRepository` + implemented in `SupabaseUserRepository` (UserProfileDto with toDomain)
+  - `UserProfileViewModel`: loads profile + recent runs (completed/in_progress last 10), detects own vs other profile
+  - `UserProfileScreen`: avatar with zone-color ring, pace zone badge, show-up rate badge (green/amber/red), reputation badge (Trusted/Pacer/Active), stats row (runs/partners/weekly avg), running stats card, connected apps, recent runs list
+  - `UserProfileRoute` stub replaced with real `UserProfileRoot` in nav graph
+  - `FakeUserRepository` updated with `getUserProfile` stub
+  - BUILD SUCCESSFUL (all prior tests still pass)
 
 ---
 
@@ -1091,7 +1132,18 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 1.1
 - **Deliverable:** Device tokens saved to Supabase on login. Deleted on logout and account delete. Edge Function sends push and marks sent.
 
-- [ ] Done
+- [x] Done
+  - `push_token` column added to `users` table (migration applied)
+  - `NotificationRepository` + `SupabaseNotificationRepository` in `shared/notifications`
+  - `PaceUpFirebaseMessagingService`: registers token on refresh, shows foreground notifications
+  - `MainActivity.registerFcmToken()`: fetches token on each launch (covers pre-login installs)
+  - `SupabaseAuthRepository.signOut()` clears `push_token = null` before sign-out (spec §6.4)
+  - `notification_dispatcher` Edge Function deployed and ACTIVE: polls `notifications`, sends FCM, marks sent
+  - Firebase BOM 33.15.0 + google-services plugin wired; placeholder `google-services.json` in repo
+  - TODO: replace `androidApp/google-services.json` with real file from Firebase Console
+  - TODO: set `FIREBASE_SERVER_KEY` Supabase secret before push delivery works
+  - iOS: APNs counterpart deferred — verify on Mac before PR (Task 15.6)
+  - Branch: `feat/push-notifications`
 
 ---
 

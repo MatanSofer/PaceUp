@@ -21,11 +21,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,6 +70,8 @@ private val SuccessGreen = Color(0xFF10B981)
 @Composable
 fun RunDetailRoot(
     onNavigateBack: () -> Unit,
+    onNavigateToChat: (runId: String, runTitle: String) -> Unit = { _, _ -> },
+    onNavigateToUserProfile: (userId: String) -> Unit = {},
     viewModel: RunDetailViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -70,10 +79,8 @@ fun RunDetailRoot(
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             RunDetailEvent.NavigateBack -> onNavigateBack()
-            is RunDetailEvent.JoinRun -> {
-                // TODO(paceup): wire to join flow in Task 5.2
-                onNavigateBack()
-            }
+            is RunDetailEvent.NavigateToChat -> onNavigateToChat(event.runId, event.runTitle)
+            is RunDetailEvent.NavigateToUserProfile -> onNavigateToUserProfile(event.userId)
         }
     }
 
@@ -112,8 +119,7 @@ fun RunDetailScreen(
             }
             state.run != null -> {
                 RunDetailContent(
-                    run = state.run,
-                    participants = state.participants,
+                    state = state,
                     onAction = onAction,
                 )
             }
@@ -137,10 +143,10 @@ fun RunDetailScreen(
 
 @Composable
 private fun RunDetailContent(
-    run: Run,
-    participants: List<RunParticipant>,
+    state: RunDetailState,
     onAction: (RunDetailAction) -> Unit,
 ) {
+    val run = state.run ?: return
     Box(modifier = Modifier.fillMaxSize()) {
         // Scrollable body — padded at bottom so sticky join button doesn't cover content
         Column(
@@ -163,12 +169,35 @@ private fun RunDetailContent(
             // ── Requirements ─────────────────────────────────────────────────
             RequirementsSection(run = run)
 
-            // ── Participants ─────────────────────────────────────────────────
-            if (participants.isNotEmpty()) {
+            // ── Pending requests (creator only) ───────────────────────────────
+            if (state.isCreator && state.pendingRequests.isNotEmpty()) {
+                Spacer(Modifier.height(16.dp))
+                PendingRequestsSection(
+                    requests = state.pendingRequests,
+                    onAccept = { onAction(RunDetailAction.OnAcceptParticipant(it)) },
+                    onDecline = { onAction(RunDetailAction.OnDeclineParticipant(it)) },
+                )
+            }
+
+            // ── Accepted participants ─────────────────────────────────────────
+            if (state.participants.isNotEmpty()) {
                 Spacer(Modifier.height(16.dp))
                 ParticipantsSection(
-                    participants = participants,
+                    participants = state.participants,
                     maxParticipants = run.maxParticipants,
+                    onParticipantClick = { onAction(RunDetailAction.OnParticipantClick(it)) },
+                )
+            }
+
+            // ── Group chat button (accepted participant or creator) ────────────
+            val showChat = state.isCreator || state.joinStatus == JoinStatus.JOINED
+            if (showChat) {
+                Spacer(Modifier.height(16.dp))
+                ChatButton(
+                    onClick = { onAction(RunDetailAction.OnChatClick) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                 )
             }
 
@@ -180,15 +209,35 @@ private fun RunDetailContent(
             }
         }
 
-        // ── Sticky join button ────────────────────────────────────────────────
-        JoinButton(
-            run = run,
-            onClick = { onAction(RunDetailAction.OnJoinClick) },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+        // ── Sticky bottom action ──────────────────────────────────────────────
+        if (state.isCreator) {
+            CreatorCancelButton(
+                state = state,
+                onAction = onAction,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            )
+        } else {
+            JoinButton(
+                state = state,
+                onAction = onAction,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            )
+        }
+    }
+
+    // Cancel run confirmation dialog
+    if (state.showCancelRunDialog) {
+        CancelRunDialog(
+            onConfirm = { reason -> onAction(RunDetailAction.OnConfirmCancelRun(reason)) },
+            onDismiss = { onAction(RunDetailAction.OnDismissCancelRunDialog) },
         )
     }
 }
@@ -333,6 +382,7 @@ private fun RequirementsSection(run: Run) {
 private fun ParticipantsSection(
     participants: List<RunParticipant>,
     maxParticipants: Int?,
+    onParticipantClick: (String) -> Unit = {},
 ) {
     val countLabel = if (maxParticipants != null)
         "${participants.size} / $maxParticipants joined"
@@ -378,9 +428,12 @@ private fun ParticipantsSection(
             }
         }
 
-        // Participant name list
+        // Participant name list — tappable to view profile
         participants.forEach { participant ->
-            ParticipantRow(participant = participant)
+            ParticipantRow(
+                participant = participant,
+                onClick = { onParticipantClick(participant.userId) },
+            )
         }
     }
 }
@@ -431,7 +484,7 @@ private fun OverflowAvatar(count: Int) {
 }
 
 @Composable
-private fun ParticipantRow(participant: RunParticipant) {
+private fun ParticipantRow(participant: RunParticipant, onClick: () -> Unit = {}) {
     val zoneColor = participant.paceZone?.let { zoneName ->
         runCatching { PaceZone.valueOf(zoneName).color() }.getOrNull()
     } ?: Color(0xFF6B7280)
@@ -440,6 +493,7 @@ private fun ParticipantRow(participant: RunParticipant) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         // Mini avatar with zone ring
@@ -520,24 +574,239 @@ private fun DescriptionSection(description: String) {
     }
 }
 
+// ── Pending requests section (creator only) ───────────────────────────────────
+
+@Composable
+private fun PendingRequestsSection(
+    requests: List<RunParticipant>,
+    onAccept: (String) -> Unit,
+    onDecline: (String) -> Unit,
+) {
+    SectionCard {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+        ) {
+            Text(
+                text = "⏳  ${requests.size} pending request${if (requests.size != 1) "s" else ""}",
+                color = Color(0xFFF59E0B),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
+        requests.forEach { request ->
+            PendingRequestRow(
+                participant = request,
+                onAccept = { onAccept(request.userId) },
+                onDecline = { onDecline(request.userId) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun PendingRequestRow(
+    participant: RunParticipant,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+) {
+    val zoneColor = participant.paceZone?.let { zoneName ->
+        runCatching { PaceZone.valueOf(zoneName).color() }.getOrNull()
+    } ?: Color(0xFF6B7280)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Avatar with zone ring
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(zoneColor.copy(alpha = 0.15f))
+                    .border(2.dp, zoneColor, CircleShape),
+            ) {
+                Text(
+                    text = participant.displayName.take(1).uppercase(),
+                    color = zoneColor,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = participant.displayName,
+                    color = TextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    participant.paceZone?.let {
+                        Text(text = "Zone $it", color = zoneColor, fontSize = 12.sp)
+                    }
+                    participant.showUpRate?.let { rate ->
+                        val rateColor = when {
+                            rate >= 0.85f -> SuccessGreen
+                            rate >= 0.70f -> Color(0xFFF59E0B)
+                            else -> Color(0xFFEF4444)
+                        }
+                        Text(
+                            text = "${(rate * 100).toInt()}% show-up",
+                            color = rateColor,
+                            fontSize = 12.sp,
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Decline button (outlined)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
+                    .clickable { onDecline() }
+                    .padding(vertical = 8.dp),
+            ) {
+                Text(text = "Decline", color = TextMuted, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            }
+            // Accept button (filled green)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(SuccessGreen)
+                    .clickable { onAccept() }
+                    .padding(vertical = 8.dp),
+            ) {
+                Text(text = "Accept", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+    HorizontalDivider(color = DividerColor, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
+}
+
 // ── Join button ───────────────────────────────────────────────────────────────
 
 @Composable
 private fun JoinButton(
-    run: Run,
-    onClick: () -> Unit,
+    state: RunDetailState,
+    onAction: (RunDetailAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val (label, enabled) = when {
-        run.status == RunStatus.CANCELLED -> "Cancelled" to false
-        run.status == RunStatus.COMPLETED -> "Run completed" to false
-        run.joinMode == "invite_only" -> "Invite only" to false
-        run.status == RunStatus.FULL -> "Run full" to false
-        run.joinMode == "request" -> "Request to join →" to true
-        else -> "Join run →" to true
+    val run = state.run ?: return
+    if (state.isCreator) return  // Creator manages participants — no join button
+
+    val (label, enabled, onClick) = when {
+        state.isJoining -> Triple("…", false, null)
+        run.status == RunStatus.CANCELLED -> Triple("Cancelled", false, null)
+        run.status == RunStatus.COMPLETED -> Triple("Run completed", false, null)
+        run.joinMode == "invite_only" -> Triple("Invite only", false, null)
+        run.status == RunStatus.FULL && state.joinStatus == JoinStatus.NONE ->
+            Triple("Run full", false, null)
+        state.joinStatus == JoinStatus.JOINED ->
+            Triple("Leave run", true, RunDetailAction.OnCancelParticipationClick)
+        state.joinStatus == JoinStatus.REQUESTED ->
+            Triple("Cancel request", true, RunDetailAction.OnCancelParticipationClick)
+        !state.canJoin ->
+            Triple("Verified runners only", false, null)
+        run.joinMode == "request" ->
+            Triple("Request to join →", true, RunDetailAction.OnJoinClick)
+        else -> Triple("Join run →", true, RunDetailAction.OnJoinClick)
     }
 
-    val bg = if (enabled) PrimaryBlue else SurfaceElevated
+    val bg = when {
+        state.isJoining -> SurfaceElevated
+        state.joinStatus == JoinStatus.JOINED -> Color(0xFF0F6E56)  // success green — leave
+        state.joinStatus == JoinStatus.REQUESTED -> SurfaceElevated
+        enabled -> PrimaryBlue
+        else -> SurfaceElevated
+    }
+    val textColor = if (enabled || state.isJoining) Color.White else TextMuted
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(100.dp))
+            .background(bg)
+            .then(if (enabled && onClick != null) Modifier.clickable { onAction(onClick) } else Modifier)
+            .padding(vertical = 16.dp),
+    ) {
+        if (state.isJoining) {
+            CircularProgressIndicator(
+                color = TextMuted,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(20.dp),
+            )
+        } else {
+            Text(
+                text = label,
+                color = textColor,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+// ── Group chat button ─────────────────────────────────────────────────────────
+
+@Composable
+private fun ChatButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceColor)
+            .border(1.dp, PrimaryBlue.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+    ) {
+        Text(text = "💬", fontSize = 16.sp)
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = "Group Chat",
+            color = PrimaryBlue,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+// ── Creator cancel button ──────────────────────────────────────────────────────
+
+@Composable
+private fun CreatorCancelButton(
+    state: RunDetailState,
+    onAction: (RunDetailAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val run = state.run ?: return
+    val alreadyCancelled = run.status == com.example.paceup.shared.runmatching.domain.RunStatus.CANCELLED
+
+    val (label, enabled) = when {
+        state.isCancellingRun -> "Cancelling…" to false
+        alreadyCancelled -> "Run cancelled" to false
+        else -> "Cancel run" to true
+    }
+    val bg = if (alreadyCancelled) SurfaceElevated else Color(0xFFA32D2D)
     val textColor = if (enabled) Color.White else TextMuted
 
     Box(
@@ -545,16 +814,64 @@ private fun JoinButton(
         modifier = modifier
             .clip(RoundedCornerShape(100.dp))
             .background(bg)
-            .then(if (enabled) Modifier.clickable { onClick() } else Modifier)
+            .then(if (enabled) Modifier.clickable { onAction(RunDetailAction.OnCancelRunClick) } else Modifier)
             .padding(vertical = 16.dp),
     ) {
-        Text(
-            text = label,
-            color = textColor,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
+        if (state.isCancellingRun) {
+            CircularProgressIndicator(color = TextMuted, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+        } else {
+            Text(text = label, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        }
     }
+}
+
+@Composable
+private fun CancelRunDialog(
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var reason by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = SurfaceColor,
+        title = {
+            Text(text = "Cancel this run?", color = TextPrimary, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "All accepted participants will be notified. This cannot be undone.",
+                    color = TextMuted,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                )
+                OutlinedTextField(
+                    value = reason,
+                    onValueChange = { reason = it },
+                    placeholder = { Text("Reason (optional)", color = TextMuted, fontSize = 13.sp) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryBlue,
+                        unfocusedBorderColor = DividerColor,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                    ),
+                    singleLine = false,
+                    maxLines = 3,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(reason.trim()) }) {
+                Text("Yes, cancel run", color = Color(0xFFEF4444), fontWeight = FontWeight.SemiBold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Keep run", color = TextMuted)
+            }
+        },
+    )
 }
 
 // ── Back button ───────────────────────────────────────────────────────────────

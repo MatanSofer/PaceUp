@@ -16,6 +16,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object SearchRoute
 @Serializable data object HomeRoute
 @Serializable data class RunDetailRoute(val runId: String)
+@Serializable data class RunChatRoute(val runId: String, val runTitle: String)
 @Serializable data object CreateRunRoute
 @Serializable data class UserProfileRoute(val userId: String)
 @Serializable data object RivalDashboardRoute

@@ -6,8 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -50,16 +52,17 @@ fun RunCard(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .height(IntrinsicSize.Min)
             .clip(RoundedCornerShape(16.dp))
             .background(SurfaceColor)
             .border(1.dp, DividerColor, RoundedCornerShape(16.dp))
             .clickable { onJoinClick(run.id) }
     ) {
-        // Left zone accent bar
+        // Left zone accent bar — fillMaxHeight so it matches the card's actual height
         Box(
             modifier = Modifier
                 .width(4.dp)
-                .height(120.dp)
+                .fillMaxHeight()
                 .background(zoneColor)
         )
 

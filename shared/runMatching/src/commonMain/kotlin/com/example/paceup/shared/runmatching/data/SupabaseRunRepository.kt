@@ -1,6 +1,7 @@
 package com.example.paceup.shared.runmatching.data
 
 import com.example.paceup.shared.network.error.AppError
+import com.example.paceup.shared.network.error.AuthError
 import com.example.paceup.shared.network.error.RunError
 import com.example.paceup.shared.network.logger.AppLogger
 import com.example.paceup.shared.network.result.Result
@@ -13,14 +14,19 @@ import com.example.paceup.shared.runmatching.domain.RunRepository
 import com.example.paceup.shared.runmatching.domain.RunStatus
 import com.example.paceup.shared.runmatching.domain.toDomain
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.hours
 
 private const val TAG = "SupabaseRunRepository"
 private const val TABLE = "runs"
+private const val PARTICIPANTS_TABLE = "run_participants"
 
 /**
  * Supabase-backed implementation of [RunRepository].
@@ -43,8 +49,9 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
             val rows = supabase.postgrest[TABLE]
                 .select(Columns.ALL) {
                     filter {
-                        // Only upcoming runs in open/full status
+                        // Only upcoming runs in open/full status, not in the past
                         isIn("status", listOf("open", "full"))
+                        gte("scheduled_at", Clock.System.now().toString())
                     }
                     limit(200)
                 }
@@ -141,6 +148,7 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
                 .select(Columns.ALL) {
                     filter {
                         isIn("status", listOf("open", "full"))
+                        gte("scheduled_at", Clock.System.now().toString())
                         if (query.isNotBlank()) {
                             // PostgREST ilike for partial matching on city or meeting_address
                             or {
@@ -192,6 +200,172 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
     override fun observeRunStatus(runId: String): Flow<RunStatus> = flow {
         val result = getRunById(runId)
         if (result is Result.Success) emit(result.data.status)
+    }
+
+    override suspend fun joinRun(runId: String): Result<Unit, AppError> {
+        AppLogger.d(TAG, "joinRun enter runId=$runId")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(AuthError.UNAUTHORIZED)
+        return runCatching {
+            supabase.postgrest[PARTICIPANTS_TABLE].insert(
+                JoinRunDto(runId = runId, userId = userId, status = "accepted")
+            )
+        }.fold(
+            onSuccess = {
+                AppLogger.i(TAG, "joinRun success runId=$runId userId=$userId")
+                Result.Success(Unit)
+            },
+            onFailure = { e ->
+                AppLogger.e(TAG, "joinRun failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
+    override suspend fun requestToJoin(runId: String): Result<Unit, AppError> {
+        AppLogger.d(TAG, "requestToJoin enter runId=$runId")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(AuthError.UNAUTHORIZED)
+        return runCatching {
+            supabase.postgrest[PARTICIPANTS_TABLE].insert(
+                JoinRunDto(runId = runId, userId = userId, status = "requested")
+            )
+        }.fold(
+            onSuccess = {
+                AppLogger.i(TAG, "requestToJoin success runId=$runId userId=$userId")
+                Result.Success(Unit)
+            },
+            onFailure = { e ->
+                AppLogger.e(TAG, "requestToJoin failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
+    override suspend fun acceptParticipant(runId: String, userId: String): Result<Unit, AppError> {
+        AppLogger.d(TAG, "acceptParticipant runId=$runId userId=$userId")
+        return runCatching {
+            supabase.postgrest[PARTICIPANTS_TABLE].update(
+                UpdateParticipantStatusDto(status = "accepted")
+            ) {
+                filter {
+                    eq("run_id", runId)
+                    eq("user_id", userId)
+                }
+            }
+        }.fold(
+            onSuccess = {
+                AppLogger.i(TAG, "acceptParticipant success runId=$runId userId=$userId")
+                Result.Success(Unit)
+            },
+            onFailure = { e ->
+                AppLogger.e(TAG, "acceptParticipant failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
+    override suspend fun declineParticipant(runId: String, userId: String): Result<Unit, AppError> {
+        AppLogger.d(TAG, "declineParticipant runId=$runId userId=$userId")
+        return runCatching {
+            supabase.postgrest[PARTICIPANTS_TABLE].update(
+                UpdateParticipantStatusDto(status = "declined")
+            ) {
+                filter {
+                    eq("run_id", runId)
+                    eq("user_id", userId)
+                }
+            }
+        }.fold(
+            onSuccess = {
+                AppLogger.i(TAG, "declineParticipant success runId=$runId userId=$userId")
+                Result.Success(Unit)
+            },
+            onFailure = { e ->
+                AppLogger.e(TAG, "declineParticipant failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
+    override suspend fun cancelParticipation(runId: String): Result<Unit, AppError> {
+        AppLogger.d(TAG, "cancelParticipation enter runId=$runId")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(AuthError.UNAUTHORIZED)
+        val run = when (val r = getRunById(runId)) {
+            is Result.Success -> r.data
+            is Result.Error -> return r
+        }
+        return runCatching {
+            val scheduledAt = Instant.parse(run.scheduledAt)
+            val twoHoursFromNow = Clock.System.now() + 2.hours
+            if (scheduledAt > twoHoursFromNow) {
+                // More than 2h away — remove the row entirely, no show-up rate penalty (spec §4.4)
+                AppLogger.i(TAG, "cancelParticipation: >2h away, removing row runId=$runId")
+                supabase.postgrest[PARTICIPANTS_TABLE].delete {
+                    filter {
+                        eq("run_id", runId)
+                        eq("user_id", userId)
+                    }
+                }
+            } else {
+                // Within 2h — late_cancel mark (soft penalty applied by reputation engine)
+                AppLogger.i(TAG, "cancelParticipation: ≤2h away, marking late_cancel runId=$runId")
+                supabase.postgrest[PARTICIPANTS_TABLE].update(
+                    UpdateParticipantStatusDto(status = "late_cancel")
+                ) {
+                    filter {
+                        eq("run_id", runId)
+                        eq("user_id", userId)
+                    }
+                }
+            }
+        }.fold(
+            onSuccess = { Result.Success(Unit) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "cancelParticipation failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
+    /**
+     * One-shot flow emitting all participant rows for [runId] (any status).
+     * Includes "requested" rows so the creator's management view sees pending requests.
+     * TODO(paceup): replace with Supabase Realtime subscription in shared/realtime.
+     */
+    override fun observeParticipants(runId: String): Flow<List<RunParticipant>> = flow {
+        runCatching {
+            supabase.postgrest[PARTICIPANTS_TABLE]
+                .select(
+                    Columns.raw("user_id, status, users(id, display_name, avatar_url, pace_zone, show_up_rate)")
+                ) {
+                    filter { eq("run_id", runId) }
+                }
+                .decodeList<RunParticipantDto>()
+                .map { it.toDomain() }
+        }.onSuccess { emit(it) }
+            .onFailure { e -> AppLogger.e(TAG, "observeParticipants failed: ${e.message}") }
+    }
+
+    override suspend fun cancelRun(runId: String, reason: String): Result<Unit, AppError> {
+        AppLogger.d(TAG, "cancelRun enter runId=$runId")
+        return runCatching {
+            supabase.postgrest[TABLE].update(
+                CancelRunDto(cancellationReason = reason)
+            ) {
+                filter { eq("id", runId) }
+            }
+        }.fold(
+            onSuccess = {
+                AppLogger.i(TAG, "cancelRun success runId=$runId")
+                Result.Success(Unit)
+            },
+            onFailure = { e ->
+                AppLogger.e(TAG, "cancelRun failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
     }
 
     // --- helpers ---

@@ -23,7 +23,8 @@ kotlin {
             implementation(project(":shared:network"))
         }
         androidMain.dependencies {
-            implementation(libs.ktor.client.android)
+            // OkHttp is the only Ktor Android engine with WebSocket support (required by Supabase Realtime)
+            implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

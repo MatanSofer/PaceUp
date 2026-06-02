@@ -44,4 +44,37 @@ interface RunRepository {
      * Caller is responsible for cancelling the returned [Flow].
      */
     fun observeRunStatus(runId: String): Flow<RunStatus>
+
+    /** Joins a run directly with status = accepted (for open join_mode). Current user must be authenticated. */
+    suspend fun joinRun(runId: String): Result<Unit, AppError>
+
+    /** Sends a join request with status = requested (for request join_mode). Current user must be authenticated. */
+    suspend fun requestToJoin(runId: String): Result<Unit, AppError>
+
+    /** Creator accepts the pending join request for [userId] on the given [runId]. */
+    suspend fun acceptParticipant(runId: String, userId: String): Result<Unit, AppError>
+
+    /** Creator declines the pending join request for [userId] on the given [runId]. */
+    suspend fun declineParticipant(runId: String, userId: String): Result<Unit, AppError>
+
+    /**
+     * Current user cancels their own participation.
+     * If the run is >2h away: removes the row with no penalty (spec §4.4).
+     * If ≤2h away: sets status to late_cancel.
+     */
+    suspend fun cancelParticipation(runId: String): Result<Unit, AppError>
+
+    /**
+     * Emits all participant rows for [runId] (including requested status) so the creator's
+     * management view can see pending requests alongside accepted runners.
+     * TODO(paceup): replace one-shot flow with Supabase Realtime subscription in shared/realtime.
+     */
+    fun observeParticipants(runId: String): Flow<List<RunParticipant>>
+
+    /**
+     * Creator cancels the run: sets status to cancelled and records [reason].
+     * The `run_cancellation_notify` Edge Function is triggered server-side to push
+     * notifications to all accepted participants (spec §8.4).
+     */
+    suspend fun cancelRun(runId: String, reason: String): Result<Unit, AppError>
 }

@@ -12,6 +12,7 @@ import com.example.paceup.shared.runmatching.domain.RunRepository
 import com.example.paceup.shared.runmatching.domain.RunStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 
 val fakeRun = Run(
     id = "run-1",
@@ -59,6 +60,11 @@ class FakeRunRepository : RunRepository {
 
     var runByIdResult: Result<Run, AppError> = Result.Success(fakeRun)
     var participantsResult: Result<List<RunParticipant>, AppError> = Result.Success(fakeParticipants)
+    var joinRunResult: Result<Unit, AppError> = Result.Success(Unit)
+    var requestToJoinResult: Result<Unit, AppError> = Result.Success(Unit)
+    var acceptParticipantResult: Result<Unit, AppError> = Result.Success(Unit)
+    var declineParticipantResult: Result<Unit, AppError> = Result.Success(Unit)
+    var cancelParticipationResult: Result<Unit, AppError> = Result.Success(Unit)
 
     override suspend fun getRunById(runId: String): Result<Run, AppError> = runByIdResult
 
@@ -84,4 +90,27 @@ class FakeRunRepository : RunRepository {
     ): Result<List<Run>, AppError> = Result.Success(emptyList())
 
     override fun observeRunStatus(runId: String): Flow<RunStatus> = emptyFlow()
+
+    override suspend fun joinRun(runId: String): Result<Unit, AppError> = joinRunResult
+
+    override suspend fun requestToJoin(runId: String): Result<Unit, AppError> = requestToJoinResult
+
+    override suspend fun acceptParticipant(runId: String, userId: String): Result<Unit, AppError> =
+        acceptParticipantResult
+
+    override suspend fun declineParticipant(runId: String, userId: String): Result<Unit, AppError> =
+        declineParticipantResult
+
+    override suspend fun cancelParticipation(runId: String): Result<Unit, AppError> =
+        cancelParticipationResult
+
+    var observeParticipantsFlow: Flow<List<RunParticipant>> = flowOf(fakeParticipants)
+
+    override fun observeParticipants(runId: String): Flow<List<RunParticipant>> =
+        observeParticipantsFlow
+
+    var cancelRunResult: Result<Unit, AppError> = Result.Success(Unit)
+
+    override suspend fun cancelRun(runId: String, reason: String): Result<Unit, AppError> =
+        cancelRunResult
 }

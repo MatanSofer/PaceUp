@@ -282,6 +282,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(16.dp))
                 RunCard(
                     run = state.selectedRun,
+                    scheduledTimeDisplay = formatScheduledAt(state.selectedRun.scheduledAt),
                     onJoinClick = { id ->
                         onAction(HomeAction.OnBottomSheetDismiss)
                         onJoinRunClick(id)

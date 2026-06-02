@@ -26,8 +26,6 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
             implementation(libs.androidx.core.ktx)
-            // Firebase — version managed by BOM
-            implementation(platform(libs.firebase.bom))
             implementation(libs.firebase.messaging)
         }
     }
@@ -73,4 +71,6 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+    // Firebase BOM moved here — platform() inside KMP sourceSets is removed in Kotlin 2.3 (KT-58759)
+    add("androidMainImplementation", platform(libs.firebase.bom))
 }

@@ -29,7 +29,8 @@ class PaceUpFirebaseMessagingService : FirebaseMessagingService() {
     private val notificationRepository: NotificationRepository by inject()
 
     // Scoped to service lifetime; cancelled when service is destroyed
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(serviceJob + Dispatchers.IO)
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -87,6 +88,6 @@ class PaceUpFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        serviceScope.coroutineContext[SupervisorJob]?.cancel()
+        serviceJob.cancel()
     }
 }

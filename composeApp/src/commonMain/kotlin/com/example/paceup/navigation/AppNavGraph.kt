@@ -12,8 +12,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.paceup.feature.createrun.CreateRunRoot
 import com.example.paceup.feature.home.HomeRoot
+import com.example.paceup.feature.runchat.RunChatRoot
 import com.example.paceup.feature.rundetail.RunDetailRoot
 import com.example.paceup.feature.search.SearchRoot
+import com.example.paceup.feature.userprofile.UserProfileRoot
 import com.example.paceup.feature.login.LoginRoot
 import com.example.paceup.feature.signup.EmailVerificationRoot
 import com.example.paceup.feature.signup.SignUpRoot
@@ -121,7 +123,23 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         )
     }
     composable<RunDetailRoute> {
-        RunDetailRoot(onNavigateBack = { navController.popBackStack() })
+        RunDetailRoot(
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToChat = { runId, runTitle ->
+                navController.navigate(RunChatRoute(runId = runId, runTitle = runTitle))
+            },
+            onNavigateToUserProfile = { userId ->
+                navController.navigate(UserProfileRoute(userId))
+            },
+        )
+    }
+    composable<RunChatRoute> { backStackEntry ->
+        val route: RunChatRoute = backStackEntry.toRoute()
+        RunChatRoot(
+            runId = route.runId,
+            runTitle = route.runTitle,
+            onNavigateBack = { navController.popBackStack() },
+        )
     }
     composable<CreateRunRoute> {
         CreateRunRoot(
@@ -133,9 +151,8 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
             },
         )
     }
-    composable<UserProfileRoute> { backStackEntry ->
-        val route: UserProfileRoute = backStackEntry.toRoute()
-        StubScreen("User Profile — ${route.userId}")
+    composable<UserProfileRoute> {
+        UserProfileRoot(onNavigateBack = { navController.popBackStack() })
     }
     composable<RivalDashboardRoute> {
         StubScreen("Rival Dashboard")
