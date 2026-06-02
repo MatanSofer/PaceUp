@@ -1020,7 +1020,12 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 
 **Note:** pace_accuracy_score is Post-MVP — do NOT implement here.
 
-- [ ] Done
+- [x] Done
+  - `recalculate_user_reputation(uuid)` Postgres function: computes show_up_rate (attended / total_judged × 100), total_paceup_runs, unique_partners, reputation_tier — pure SQL, no external API
+  - `on_participant_status_terminal` trigger fires AFTER UPDATE on run_participants when status transitions to attended/no_show/late_cancel → calls recalculate_user_reputation synchronously
+  - Tier logic: new_runner (<3 attended), trusted (>=3 + show_up_rate >85), active (>=3); pace_accuracy criterion for trusted is Post-MVP
+  - `reputation_recalculate` Edge Function deployed (ACTIVE): thin wrapper for admin manual recalculation; supports single user_id or `{ all: true }` batch
+  - Build: no Kotlin changes — pure Supabase SQL + Edge Function
 
 ---
 
