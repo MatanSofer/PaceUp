@@ -1,5 +1,6 @@
 package com.example.paceup.feature.stravaconnect
 
+import com.example.paceup.shared.auth.profile.ProfileError
 import com.example.paceup.shared.auth.strava.StravaActivityMetrics
 import com.example.paceup.shared.auth.strava.StravaOAuthCodeStore
 import com.example.paceup.shared.auth.strava.StravaToken
@@ -32,6 +33,7 @@ class StravaConnectViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var fakeRepo: FakeStravaAuthRepository
+    private lateinit var fakeProfileRepo: FakeProfileRepository
     private lateinit var viewModel: StravaConnectViewModel
 
     @BeforeTest
@@ -39,7 +41,8 @@ class StravaConnectViewModelTest {
         Dispatchers.setMain(testDispatcher)
         StravaOAuthCodeStore.consumeCode() // clear any leftover state
         fakeRepo = FakeStravaAuthRepository()
-        viewModel = StravaConnectViewModel(fakeRepo)
+        fakeProfileRepo = FakeProfileRepository()
+        viewModel = StravaConnectViewModel(fakeRepo, fakeProfileRepo)
     }
 
     @AfterTest
@@ -181,5 +184,24 @@ class StravaConnectViewModelTest {
         val state = viewModel.state.first { it.isConnected || it.error != null }
 
         assertEquals("5:00 /km", state.avgPaceDisplay)
+    }
+
+    @Test
+    fun oauthCode_success_callsSaveStravaConnection() = runTest {
+        StravaOAuthCodeStore.submitCode("valid-code")
+        viewModel.state.first { it.isConnected || it.error != null }
+
+        assertEquals(1, fakeProfileRepo.saveStravaConnectionCallCount)
+    }
+
+    @Test
+    fun oauthCode_success_saveFailure_stillSetsConnected() = runTest {
+        fakeProfileRepo.saveStravaConnectionResult = Result.Error(ProfileError.SAVE_FAILED)
+        StravaOAuthCodeStore.submitCode("valid-code")
+        val state = viewModel.state.first { it.isConnected || it.error != null }
+
+        // Fail-open: UI shows success even when Supabase save fails.
+        assertTrue(state.isConnected)
+        assertNull(state.error)
     }
 }

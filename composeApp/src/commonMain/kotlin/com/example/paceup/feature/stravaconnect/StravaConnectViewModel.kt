@@ -2,6 +2,7 @@ package com.example.paceup.feature.stravaconnect
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.paceup.shared.auth.profile.ProfileRepository
 import com.example.paceup.shared.auth.strava.StravaAuthRepository
 import com.example.paceup.shared.auth.strava.StravaOAuthCodeStore
 import com.example.paceup.shared.network.logger.AppLogger
@@ -40,9 +41,10 @@ sealed interface StravaConnectEvent {
     data object NavigateToLocationPermission : StravaConnectEvent
 }
 
-/** Orchestrates Strava OAuth → token exchange → activity fetch → pace zone calculation. */
+/** Orchestrates Strava OAuth → token exchange → activity fetch → pace zone calculation → Supabase persistence. */
 class StravaConnectViewModel(
-    private val stravaAuthRepository: StravaAuthRepository
+    private val stravaAuthRepository: StravaAuthRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StravaConnectState())
@@ -110,10 +112,20 @@ class StravaConnectViewModel(
                         val paceResult = PaceZoneCalculator.calculate(
                             activities.map { Pair(it.avgPaceSecondsPerKm, it.distanceKm) }
                         )
-                        // TODO(paceup): store to Supabase users table once schema is ready (Task 3.x)
-                        //   strava_connected = true
-                        //   is_verified = paceResult != null
-                        //   pace_zone = paceResult?.zone?.name
+
+                        // Persist tokens + pace data to Supabase for server-side attendance verification.
+                        // Fail-open: UI shows success even if save fails — user can reconnect from Settings.
+                        val saveResult = profileRepository.saveStravaConnection(
+                            token = token,
+                            isVerified = paceResult != null,
+                            paceZone = paceResult?.zone?.name,
+                            avgPaceSeconds = paceResult?.avgPaceSecondsPerKm,
+                            weeklyMileageAvgKm = paceResult?.weeklyMileageAvgKm,
+                        )
+                        if (saveResult is Result.Error) {
+                            AppLogger.e(TAG, "handleOAuthCode: Supabase save failed — attendance verification may not work until reconnected")
+                        }
+
                         AppLogger.i(TAG, "handleOAuthCode: complete zone=${paceResult?.zone}")
                         _state.update {
                             it.copy(
@@ -132,7 +144,6 @@ class StravaConnectViewModel(
     }
 
     private fun skip() {
-        // TODO(paceup): store strava_connected=false, is_verified=false in Supabase users table
         AppLogger.d(TAG, "skip: user skipped Strava connect")
         viewModelScope.launch { _events.send(StravaConnectEvent.NavigateToLocationPermission) }
     }

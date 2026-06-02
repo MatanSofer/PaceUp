@@ -1000,7 +1000,14 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 - Update run_participants.status and actual_avg_pace
 - Raw activity data NOT stored — only actual_avg_pace derived metric
 
-- [ ] Done
+- [x] Done
+  - `user_strava_tokens` table: separate from `users` for security; RLS — owner only; service_role reads all (edge function bypass)
+  - `ProfileRepository.saveStravaConnection()` added — upserts tokens + updates users with strava_connected, is_verified, pace_zone, avg_pace_seconds, weekly_mileage_avg, strava_athlete_id
+  - `StravaConnectViewModel` now injects `ProfileRepository` and persists tokens after successful OAuth (fail-open: UI shows success even if save fails)
+  - `get_runs_for_attendance_verify()` SQL helper: returns runs ended 10-90 min ago with accepted participants
+  - `run_attendance_verify` Edge Function deployed (ACTIVE): matches Strava activity by time ±30min + location ≤500m; refreshes expired tokens; updates status to attended/no_show
+  - pg_cron schedule applied (every 30min) — falls back gracefully on free-tier without pg_cron
+  - 13 ViewModel tests for StravaConnectViewModel (2 new tests for save behavior) — BUILD SUCCESSFUL
 
 ---
 
