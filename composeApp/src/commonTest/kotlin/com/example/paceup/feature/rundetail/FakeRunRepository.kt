@@ -45,6 +45,7 @@ val fakeParticipants = listOf(
         paceZone = "C",
         showUpRate = 0.92f,
         status = "accepted",
+        reputationTier = "trusted",
     ),
     RunParticipant(
         userId = "user-3",
@@ -53,6 +54,7 @@ val fakeParticipants = listOf(
         paceZone = "B",
         showUpRate = 0.68f,
         status = "accepted",
+        reputationTier = "active",
     ),
 )
 

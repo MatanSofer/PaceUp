@@ -85,6 +85,23 @@ fun CreateRunScreen(
     state: CreateRunState,
     onAction: (CreateRunAction) -> Unit,
 ) {
+    // Show a loading spinner while we check the tier
+    if (state.isCheckingTier) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Background),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(color = Color(0xFF1A73E8))
+        }
+        return
+    }
+
+    // new_runner gate — shown instead of the form
+    if (!state.canCreateRun) {
+        NewRunnerGateScreen(onBack = { onAction(CreateRunAction.OnBackClick) })
+        return
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -975,6 +992,77 @@ private fun filterCoordinate(input: String): String {
         if (dotIndex == -1) it else it.take(dotIndex + 1) + it.drop(dotIndex + 1).filter { c -> c != '.' }
     }
     return if (hasLeadingMinus) "-$singleDot" else singleDot
+}
+
+// ── New runner gate ───────────────────────────────────────────────────────────
+
+@Composable
+private fun NewRunnerGateScreen(onBack: () -> Unit) {
+    val bg = Color(0xFF0D1B2A)
+    val surfaceColor = Color(0xFF1F2937)
+    val textPrimary = Color(0xFFF9FAFB)
+    val textMuted = Color(0xFF9CA3AF)
+    val divider = Color(0xFF374151)
+    val amber = Color(0xFFF59E0B)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bg)
+            .systemBarsPadding()
+            .navigationBarsPadding(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp),
+        ) {
+            Text(text = "🏃", fontSize = 52.sp)
+            Spacer(Modifier.height(20.dp))
+            Text(
+                text = "Keep running to unlock",
+                color = textPrimary,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "You need 3 attended runs on PaceUp before you can create group runs. " +
+                    "Join existing runs, show up, and build your reputation first.",
+                color = textMuted,
+                fontSize = 14.sp,
+                lineHeight = 22.sp,
+            )
+            Spacer(Modifier.height(24.dp))
+            // Progress hint chip
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(surfaceColor)
+                    .border(1.dp, amber.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+            ) {
+                Text(
+                    text = "Requirement: 3 attended runs",
+                    color = amber,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Spacer(Modifier.height(32.dp))
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(100.dp))
+                    .border(1.dp, divider, RoundedCornerShape(100.dp))
+                    .clickable { onBack() }
+                    .padding(vertical = 14.dp),
+            ) {
+                Text(text = "Go back", color = textMuted, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            }
+        }
+    }
 }
 
 /** Allows only digits (0–9). */

@@ -72,6 +72,7 @@ fun RunDetailRoot(
     onNavigateBack: () -> Unit,
     onNavigateToChat: (runId: String, runTitle: String) -> Unit = { _, _ -> },
     onNavigateToUserProfile: (userId: String) -> Unit = {},
+    onNavigateToRatePartners: (runId: String, runTitle: String) -> Unit = { _, _ -> },
     viewModel: RunDetailViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -81,6 +82,7 @@ fun RunDetailRoot(
             RunDetailEvent.NavigateBack -> onNavigateBack()
             is RunDetailEvent.NavigateToChat -> onNavigateToChat(event.runId, event.runTitle)
             is RunDetailEvent.NavigateToUserProfile -> onNavigateToUserProfile(event.userId)
+            is RunDetailEvent.NavigateToRatePartners -> onNavigateToRatePartners(event.runId, event.runTitle)
         }
     }
 
@@ -195,6 +197,17 @@ private fun RunDetailContent(
                 Spacer(Modifier.height(16.dp))
                 ChatButton(
                     onClick = { onAction(RunDetailAction.OnChatClick) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+            }
+
+            // ── Rate partners button (attended participants only) ───────────────
+            if (state.userAttended) {
+                Spacer(Modifier.height(8.dp))
+                RatePartnersButton(
+                    onClick = { onAction(RunDetailAction.OnRatePartnersClick) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
@@ -516,12 +529,20 @@ private fun ParticipantRow(participant: RunParticipant, onClick: () -> Unit = {}
         Spacer(Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = participant.displayName,
-                color = TextPrimary,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = participant.displayName,
+                    color = TextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                if (participant.reputationTier == "trusted" || participant.reputationTier == "pacer_eligible") {
+                    TrustedBadge()
+                }
+            }
             participant.paceZone?.let {
                 Text(
                     text = "Zone $it",
@@ -712,6 +733,7 @@ private fun JoinButton(
 ) {
     val run = state.run ?: return
     if (state.isCreator) return  // Creator manages participants — no join button
+    if (state.userAttended) return  // Attended — run is done, rate partners instead
 
     val (label, enabled, onClick) = when {
         state.isJoining -> Triple("…", false, null)
@@ -762,6 +784,51 @@ private fun JoinButton(
                 fontWeight = FontWeight.SemiBold,
             )
         }
+    }
+}
+
+// ── Trusted badge (inline) ────────────────────────────────────────────────────
+
+@Composable
+private fun TrustedBadge() {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(100.dp))
+            .background(SuccessGreen.copy(alpha = 0.12f))
+            .border(0.5.dp, SuccessGreen.copy(alpha = 0.5f), RoundedCornerShape(100.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    ) {
+        Text(
+            text = "✓",
+            color = SuccessGreen,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+// ── Rate partners button ──────────────────────────────────────────────────────
+
+@Composable
+private fun RatePartnersButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(SuccessGreen.copy(alpha = 0.08f))
+            .border(1.dp, SuccessGreen.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+    ) {
+        Text(text = "⭐", fontSize = 16.sp)
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = "Rate partners",
+            color = SuccessGreen,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 

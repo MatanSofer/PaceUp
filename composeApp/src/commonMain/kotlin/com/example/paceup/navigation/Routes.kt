@@ -21,6 +21,9 @@ import kotlinx.serialization.Serializable
 @Serializable data class UserProfileRoute(val userId: String)
 @Serializable data object RivalDashboardRoute
 
+// Post-run
+@Serializable data class RatePartnersRoute(val runId: String, val runTitle: String)
+
 // Settings
 @Serializable data object SettingsRoute
 @Serializable data object SettingsAccountRoute

@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.paceup.feature.createrun.CreateRunRoot
 import com.example.paceup.feature.home.HomeRoot
+import com.example.paceup.feature.partnerrating.PartnerRatingRoot
 import com.example.paceup.feature.runchat.RunChatRoot
 import com.example.paceup.feature.rundetail.RunDetailRoot
 import com.example.paceup.feature.search.SearchRoot
@@ -131,6 +132,14 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
             onNavigateToUserProfile = { userId ->
                 navController.navigate(UserProfileRoute(userId))
             },
+            onNavigateToRatePartners = { runId, runTitle ->
+                navController.navigate(RatePartnersRoute(runId = runId, runTitle = runTitle))
+            },
+        )
+    }
+    composable<RatePartnersRoute> {
+        PartnerRatingRoot(
+            onNavigateBack = { navController.popBackStack() },
         )
     }
     composable<RunChatRoute> { backStackEntry ->

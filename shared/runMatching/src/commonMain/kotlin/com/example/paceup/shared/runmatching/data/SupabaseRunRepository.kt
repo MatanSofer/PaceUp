@@ -176,7 +176,7 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
         AppLogger.d(TAG, "getRunParticipants runId=$runId")
         return runCatching {
             supabase.postgrest["run_participants"]
-                .select(Columns.raw("user_id, status, users(id, display_name, avatar_url, pace_zone, show_up_rate)")) {
+                .select(Columns.raw("user_id, status, users(id, display_name, avatar_url, pace_zone, show_up_rate, reputation_tier)")) {
                     filter {
                         eq("run_id", runId)
                         eq("status", "accepted")
@@ -338,7 +338,7 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
         runCatching {
             supabase.postgrest[PARTICIPANTS_TABLE]
                 .select(
-                    Columns.raw("user_id, status, users(id, display_name, avatar_url, pace_zone, show_up_rate)")
+                    Columns.raw("user_id, status, users(id, display_name, avatar_url, pace_zone, show_up_rate, reputation_tier)")
                 ) {
                     filter { eq("run_id", runId) }
                 }

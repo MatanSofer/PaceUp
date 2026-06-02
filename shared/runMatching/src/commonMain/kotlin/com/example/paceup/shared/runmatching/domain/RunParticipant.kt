@@ -14,4 +14,6 @@ data class RunParticipant(
     val showUpRate: Float?,
     /** Participation status — "accepted", "pending", "declined", etc. */
     val status: String,
+    /** Reputation tier: new_runner / active / trusted / pacer_eligible (spec §4.4). */
+    val reputationTier: String?,
 )

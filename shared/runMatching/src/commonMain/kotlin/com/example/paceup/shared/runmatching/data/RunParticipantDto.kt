@@ -20,6 +20,7 @@ internal data class UserSummaryDto(
     @SerialName("avatar_url") val avatarUrl: String? = null,
     @SerialName("pace_zone") val paceZone: String? = null,
     @SerialName("show_up_rate") val showUpRate: Float? = null,
+    @SerialName("reputation_tier") val reputationTier: String? = null,
 )
 
 internal fun RunParticipantDto.toDomain() = RunParticipant(
@@ -29,4 +30,5 @@ internal fun RunParticipantDto.toDomain() = RunParticipant(
     paceZone = user?.paceZone,
     showUpRate = user?.showUpRate,
     status = status,
+    reputationTier = user?.reputationTier,
 )

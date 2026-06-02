@@ -1039,7 +1039,14 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 
 **Tags:** kept_pace, great_energy, pushed_group, early, mismatched_pace
 
-- [ ] Done
+- [x] Done
+  - partner_ratings table + RLS migration applied to Supabase
+  - SupabasePartnerRatingRepository: getPartnersToRate (two-query approach), submitRatings, hasRatedRun
+  - PartnerRatingViewModel (MVI), PartnerRatingScreen (tag chip toggle UI, already-rated/empty states)
+  - RunDetailViewModel: userAttended state, OnRatePartnersClick action, NavigateToRatePartners event; participants list includes "attended" status
+  - RunDetail "Rate partners" button visible when userAttended==true; JoinButton suppressed for attended users
+  - Wired in RunMatchingModule, PresentationModule, Routes, AppNavGraph
+  - 13 unit tests, all passing
 
 ---
 
@@ -1057,7 +1064,13 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 - trusted: >85% show-up rate, Trusted badge (pace_accuracy not required until post-MVP)
 - pacer_eligible: trusted + verified pace consistency
 
-- [ ] Done
+- [x] Done
+  - CreateRunViewModel: added UserRepository dep, checkTier() on init, canCreateRun/isCheckingTier state
+  - CreateRunScreen: loading spinner during tier check; NewRunnerGateScreen when canCreateRun==false
+  - canJoin in RunDetailViewModel extended: new_runner blocked from non-open join_mode runs
+  - RunParticipant: added reputationTier field; UserSummaryDto includes reputation_tier; query updated
+  - RunDetailScreen: TrustedBadge shown inline in participant name row for trusted/pacer_eligible tiers
+  - DB: "active users can create runs" + "new_runner can only join open runs" RLS policies applied
 
 ---
 

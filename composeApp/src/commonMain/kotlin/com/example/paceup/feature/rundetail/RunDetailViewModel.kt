@@ -45,6 +45,8 @@ data class RunDetailState(
     /** True while the cancelRun API call is in flight. */
     val isCancellingRun: Boolean = false,
     val cancelRunError: UiText? = null,
+    /** True when the current user's attendance was verified by Strava (status == "attended"). */
+    val userAttended: Boolean = false,
 )
 
 sealed interface RunDetailAction {
@@ -70,6 +72,8 @@ sealed interface RunDetailAction {
     data object OnDismissCancelRunError : RunDetailAction
     /** User taps a participant row to view their profile. */
     data class OnParticipantClick(val userId: String) : RunDetailAction
+    /** Attended user taps "Rate partners". */
+    data object OnRatePartnersClick : RunDetailAction
 }
 
 sealed interface RunDetailEvent {
@@ -77,6 +81,7 @@ sealed interface RunDetailEvent {
     /** Emitted when the user taps the group chat button (accepted participant only). */
     data class NavigateToChat(val runId: String, val runTitle: String) : RunDetailEvent
     data class NavigateToUserProfile(val userId: String) : RunDetailEvent
+    data class NavigateToRatePartners(val runId: String, val runTitle: String) : RunDetailEvent
 }
 
 /** Loads run detail, manages join/cancel/accept/decline participant flows. */
@@ -119,6 +124,7 @@ class RunDetailViewModel(
             is RunDetailAction.OnParticipantClick -> viewModelScope.launch {
                 _events.send(RunDetailEvent.NavigateToUserProfile(action.userId))
             }
+            RunDetailAction.OnRatePartnersClick -> handleRatePartnersClick()
         }
     }
 
@@ -148,18 +154,23 @@ class RunDetailViewModel(
             val isCreator = userId != null && run.creatorId == userId
             val myStatus = allParticipants.find { it.userId == userId }?.status
             val joinStatus = when (myStatus) {
-                "accepted" -> JoinStatus.JOINED
+                "accepted", "attended" -> JoinStatus.JOINED
                 "requested" -> JoinStatus.REQUESTED
                 else -> JoinStatus.NONE
             }
-            val accepted = allParticipants.filter { it.status == "accepted" }
+            val userAttended = myStatus == "attended"
+            // Include both accepted (pre-verify) and attended (post-verify) participants
+            val accepted = allParticipants.filter { it.status == "accepted" || it.status == "attended" }
             val pending = if (isCreator) allParticipants.filter { it.status == "requested" } else emptyList()
 
-            // Client-side tier gate: new_runner cannot join verified_only runs (spec §4.4)
+            // Client-side tier gate: new_runner cannot join verified_only runs or non-open runs (spec §4.4)
             val reputationTier = if (userId != null) {
                 (userRepository.getReputationTier(userId) as? Result.Success)?.data
             } else null
-            val canJoin = !isCreator && !(reputationTier == "new_runner" && run.verifiedOnly)
+            val isNewRunner = reputationTier == "new_runner"
+            val canJoin = !isCreator &&
+                !(isNewRunner && run.verifiedOnly) &&
+                !(isNewRunner && run.joinMode != "open")
 
             _state.update {
                 it.copy(
@@ -170,6 +181,7 @@ class RunDetailViewModel(
                     isCreator = isCreator,
                     joinStatus = joinStatus,
                     canJoin = canJoin,
+                    userAttended = userAttended,
                 )
             }
         }
@@ -259,6 +271,14 @@ class RunDetailViewModel(
                     )
                 }
             }
+        }
+    }
+
+    private fun handleRatePartnersClick() {
+        val run = _state.value.run ?: return
+        val title = run.title ?: "${run.mode.name.replaceFirstChar { it.uppercase() }} Run"
+        viewModelScope.launch {
+            _events.send(RunDetailEvent.NavigateToRatePartners(run.id, title))
         }
     }
 

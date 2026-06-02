@@ -7,6 +7,7 @@ import com.example.paceup.shared.network.result.Result
 import com.example.paceup.shared.runmatching.domain.CreateRunParams
 import com.example.paceup.shared.runmatching.domain.RunMode
 import com.example.paceup.shared.runmatching.domain.RunRepository
+import com.example.paceup.shared.runmatching.domain.UserRepository
 import com.example.paceup.ui.UiText
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,13 @@ data class CreateRunState(
     // Step 7 — Review
     val isLoading: Boolean = false,
     val error: UiText? = null,
+    /**
+     * False when the current user is a new_runner (fewer than 3 attended runs).
+     * new_runner users cannot create runs per spec §4.4.
+     */
+    val canCreateRun: Boolean = true,
+    /** True while the initial tier check is in flight. */
+    val isCheckingTier: Boolean = true,
 ) {
     val totalSteps: Int get() = 7
 }
@@ -113,6 +121,7 @@ sealed interface CreateRunEvent {
 class CreateRunViewModel(
     private val runRepository: RunRepository,
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CreateRunState())
@@ -120,6 +129,26 @@ class CreateRunViewModel(
 
     private val _events = Channel<CreateRunEvent>()
     val events = _events.receiveAsFlow()
+
+    init {
+        checkTier()
+    }
+
+    private fun checkTier() {
+        viewModelScope.launch {
+            val userId = when (val r = authRepository.getCurrentUser()) {
+                is Result.Success -> r.data?.id
+                is Result.Error -> null
+            }
+            if (userId == null) {
+                _state.update { it.copy(isCheckingTier = false, canCreateRun = false) }
+                return@launch
+            }
+            val tier = (userRepository.getReputationTier(userId) as? Result.Success)?.data
+            val canCreate = tier != "new_runner"
+            _state.update { it.copy(isCheckingTier = false, canCreateRun = canCreate) }
+        }
+    }
 
     fun onAction(action: CreateRunAction) {
         when (action) {
@@ -286,6 +315,10 @@ class CreateRunViewModel(
     }
 
     private fun createRun() {
+        if (!_state.value.canCreateRun) {
+            _state.update { it.copy(error = UiText.DynamicString("You need 3 attended runs before you can create runs (spec §4.4).")) }
+            return
+        }
         viewModelScope.launch {
             val s = _state.value
             _state.update { it.copy(isLoading = true, error = null) }
