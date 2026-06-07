@@ -16,6 +16,7 @@ import com.example.paceup.feature.partnerrating.PartnerRatingRoot
 import com.example.paceup.feature.rivaldashboard.RivalDashboardRoot
 import com.example.paceup.feature.settings.BlockedUsersRoot
 import com.example.paceup.feature.settings.NotificationPreferencesRoot
+import com.example.paceup.feature.settings.SettingsRoot
 import com.example.paceup.feature.runchat.RunChatRoot
 import com.example.paceup.feature.rundetail.RunDetailRoot
 import com.example.paceup.feature.search.SearchRoot
@@ -124,6 +125,9 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
             onNavigateToSearch = {
                 navController.navigate(SearchRoute)
             },
+            onNavigateToSettings = {
+                navController.navigate(SettingsRoute)
+            },
         )
     }
     composable<RunDetailRoute> {
@@ -170,7 +174,13 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         RivalDashboardRoot(onNavigateBack = { navController.popBackStack() })
     }
     composable<SettingsRoute> {
-        StubScreen("Settings") { navController.navigate(SettingsAccountRoute) }
+        SettingsRoot(
+            onNavigateBack          = { navController.popBackStack() },
+            onNavigateToAccount     = { navController.navigate(SettingsAccountRoute) },
+            onNavigateToNotifications = { navController.navigate(SettingsNotificationsRoute) },
+            onNavigateToPrivacy     = { navController.navigate(SettingsPrivacyRoute) },
+            onNavigateToApp         = { navController.navigate(SettingsAppRoute) },
+        )
     }
     composable<SettingsAccountRoute> {
         StubScreen("Settings — Account")

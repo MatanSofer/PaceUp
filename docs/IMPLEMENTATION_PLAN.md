@@ -1348,7 +1348,12 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Phase 1 complete
 - **Deliverable:** Settings navigates to Account, Notifications, Privacy, App sub-screens.
 
-- [ ] Done
+- [x] Done
+  - `SettingsViewModel` + `SettingsScreen` + `SettingsRoot` in `feature/settings`
+  - 4 section rows: Account (👤), Notifications (🔔), Privacy (🔒), App (⚙) with subtitle + chevron
+  - `SettingsRoute` nav entry wired with full destination callbacks (replaces stub)
+  - Settings gear icon (⚙) added to top-right corner of Home screen as entry point
+  - `SettingsViewModel` registered in Koin `presentationModule`
 
 ---
 

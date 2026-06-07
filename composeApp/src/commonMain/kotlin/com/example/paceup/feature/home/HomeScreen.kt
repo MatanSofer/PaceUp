@@ -83,6 +83,7 @@ fun HomeRoot(
     onNavigateToRunDetail: (String) -> Unit = {},
     onNavigateToCreateRun: () -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     mapViewModel: HomeViewModel = koinViewModel(),
     listViewModel: RunListViewModel = koinViewModel(),
 ) {
@@ -146,6 +147,22 @@ fun HomeRoot(
                 .systemBarsPadding()
                 .padding(top = TabBarTopGap),
         )
+
+        // Settings icon — top-right corner
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .systemBarsPadding()
+                .padding(top = TabBarTopGap, end = 12.dp)
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(SurfaceColor.copy(alpha = 0.95f))
+                .border(1.dp, Color(0xFF374151), CircleShape)
+                .clickable { onNavigateToSettings() },
+        ) {
+            Text(text = "⚙", fontSize = 16.sp)
+        }
     }
 }
 
