@@ -1324,7 +1324,13 @@ fun observeRivalRequest(): Flow<Rival>
 2. show-up rate < 40% → suspend from creating runs pending review
 3. Actual pace >2 min/km outside stated zone on 3+ consecutive runs → force-recalculate zone + admin alert (handled in Task 6.6)
 
-- [ ] Done
+- [x] Done
+  - `admin_flagged` column added to users; run-creation policy updated to also reject `is_suspended = true`
+  - `fn_users_with_excessive_reports(window_days, min_count)` SECURITY DEFINER SQL function using actual reports schema (`target_type`/`target_id`)
+  - `fn_users_with_low_showup()` SECURITY DEFINER SQL function — requires ≥3 judged runs to prevent false positives on first no-show
+  - `abuse_detection` Edge Function (TypeScript/Deno): calls both helpers, applies updates, returns 207 on partial error
+  - Fixed pre-existing `Math.toRadians` error in `SupabaseRunRepository` (used Java class in commonMain — replaced with `kotlin.math.PI` conversion)
+  - Fixed `ReportParams` field names (`targetType`/`targetId`) to match actual Supabase reports table schema; updated `SupabaseReportRepository` and all 3 calling ViewModels
 
 ---
 

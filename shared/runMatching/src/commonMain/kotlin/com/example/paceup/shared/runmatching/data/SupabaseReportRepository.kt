@@ -20,20 +20,19 @@ private const val TABLE = "reports"
 class SupabaseReportRepository(private val client: SupabaseClient) : ReportRepository {
 
     override suspend fun submitReport(params: ReportParams): EmptyResult<AppError> {
-        AppLogger.d(TAG, "submitReport type=${params.reportType} reason=${params.reason}")
+        AppLogger.d(TAG, "submitReport type=${params.targetType} reason=${params.reason}")
         val currentUserId = client.auth.currentUserOrNull()?.id
             ?: return Result.Error(NetworkError.UNAUTHORIZED)
         return runCatching {
             val row = buildJsonObject {
                 put("reporter_id", currentUserId)
-                put("report_type", params.reportType)
+                put("target_type", params.targetType)
                 put("reason", params.reason)
-                params.reportedUserId?.let { put("reported_user_id", it) }
-                params.reportedRunId?.let { put("reported_run_id", it) }
+                params.targetId?.let { put("target_id", it) }
                 params.description?.takeIf { it.isNotBlank() }?.let { put("description", it) }
             }
             client.postgrest[TABLE].insert(row)
-            AppLogger.i(TAG, "submitReport success type=${params.reportType}")
+            AppLogger.i(TAG, "submitReport success type=${params.targetType}")
         }.fold(
             onSuccess = { Result.Success(Unit) },
             onFailure = { e ->

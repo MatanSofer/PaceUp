@@ -149,8 +149,8 @@ class RunChatViewModel(
             _state.update { it.copy(isReportSubmitting = true) }
             reportRepository.submitReport(
                 ReportParams(
-                    reportType = "message",
-                    reportedUserId = target.senderId,
+                    targetType = "message",
+                    targetId = target.senderId,
                     reason = reason,
                     description = buildString {
                         append("Message: \"${target.messageContent}\"")

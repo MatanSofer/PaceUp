@@ -322,8 +322,8 @@ class RunDetailViewModel(
             _state.update { it.copy(isReportSubmitting = true) }
             reportRepository.submitReport(
                 ReportParams(
-                    reportType = "run",
-                    reportedRunId = target.runId,
+                    targetType = "run",
+                    targetId = target.runId,
                     reason = reason,
                     description = description.takeIf { it.isNotBlank() },
                 )

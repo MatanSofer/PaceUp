@@ -5,13 +5,14 @@ import com.example.paceup.shared.network.result.EmptyResult
 
 /**
  * Parameters for submitting a report (spec §6.2).
- * For message reports, pass the sender's id in [reportedUserId] and the message content in [description].
+ * Maps to the `reports` table columns: target_type + target_id.
+ * For message reports, pass the sender's userId as [targetId] and include message text in [description].
  */
 data class ReportParams(
-    /** "user" | "run" | "message" */
-    val reportType: String,
-    val reportedUserId: String? = null,
-    val reportedRunId: String? = null,
+    /** "user" | "run" | "message" — stored in reports.target_type */
+    val targetType: String,
+    /** UUID of the reported entity (user id, run id, or message sender id) */
+    val targetId: String? = null,
     val reason: String,
     val description: String? = null,
 )

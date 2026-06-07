@@ -174,8 +174,8 @@ class UserProfileViewModel(
             _state.update { it.copy(isReportSubmitting = true) }
             reportRepository.submitReport(
                 ReportParams(
-                    reportType = "user",
-                    reportedUserId = (target as? ReportTarget.User)?.userId,
+                    targetType = "user",
+                    targetId = (target as? ReportTarget.User)?.userId,
                     reason = reason,
                     description = description.takeIf { it.isNotBlank() },
                 )

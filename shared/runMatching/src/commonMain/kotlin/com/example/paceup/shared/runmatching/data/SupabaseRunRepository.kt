@@ -389,12 +389,13 @@ class SupabaseRunRepository(private val supabase: SupabaseClient) : RunRepositor
      * Used for client-side proximity filtering until Edge Function geo queries are ready.
      */
     private fun haversineKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+        fun toRad(deg: Double) = deg * kotlin.math.PI / 180.0
         val r = 6371.0
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLng = Math.toRadians(lng2 - lng1)
+        val dLat = toRad(lat2 - lat1)
+        val dLng = toRad(lng2 - lng1)
         val a = kotlin.math.sin(dLat / 2).let { it * it } +
-            kotlin.math.cos(Math.toRadians(lat1)) *
-            kotlin.math.cos(Math.toRadians(lat2)) *
+            kotlin.math.cos(toRad(lat1)) *
+            kotlin.math.cos(toRad(lat2)) *
             kotlin.math.sin(dLng / 2).let { it * it }
         return r * 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
     }
