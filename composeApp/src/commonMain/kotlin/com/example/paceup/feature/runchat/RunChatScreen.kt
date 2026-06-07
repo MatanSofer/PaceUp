@@ -1,8 +1,10 @@
 package com.example.paceup.feature.runchat
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -120,6 +122,7 @@ fun RunChatScreen(
             MessageList(
                 messages = state.messages,
                 currentUserId = state.currentUserId,
+                onLongPressMessage = { onAction(RunChatAction.OnLongPressMessage(it)) },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -132,6 +135,18 @@ fun RunChatScreen(
             isSending = state.isSending,
             onInputChange = { onAction(RunChatAction.OnInputChange(it)) },
             onSend = { onAction(RunChatAction.OnSendClick) },
+        )
+    }
+
+    // Report dialog — triggered by long-press on another user's message
+    val reportTarget = state.reportTarget
+    if (reportTarget != null) {
+        com.example.paceup.feature.report.ReportDialog(
+            target = reportTarget,
+            isSubmitting = state.isReportSubmitting,
+            isSuccess = state.isReportSuccess,
+            onSubmit = { reason, desc -> onAction(RunChatAction.OnSubmitReport(reason, desc)) },
+            onDismiss = { onAction(RunChatAction.OnDismissReport) },
         )
     }
 }
@@ -226,6 +241,7 @@ private fun ErrorBanner(message: String, onDismiss: () -> Unit) {
 private fun MessageList(
     messages: List<ChatMessage>,
     currentUserId: String?,
+    onLongPressMessage: (ChatMessage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -262,13 +278,18 @@ private fun MessageList(
     ) {
         items(messages, key = { it.id }) { message ->
             val isMe = message.userId == currentUserId
-            MessageBubble(message = message, isMe = isMe)
+            MessageBubble(
+                message = message,
+                isMe = isMe,
+                onLongPress = if (!isMe) ({ onLongPressMessage(message) }) else null,
+            )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MessageBubble(message: ChatMessage, isMe: Boolean) {
+private fun MessageBubble(message: ChatMessage, isMe: Boolean, onLongPress: (() -> Unit)?) {
     Column(
         horizontalAlignment = if (isMe) Alignment.End else Alignment.Start,
         modifier = Modifier.fillMaxWidth(),
@@ -292,6 +313,10 @@ private fun MessageBubble(message: ChatMessage, isMe: Boolean) {
                         bottomStart = if (isMe) 16.dp else 4.dp,
                         bottomEnd = if (isMe) 4.dp else 16.dp,
                     )
+                )
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = onLongPress,
                 )
                 .background(if (isMe) MyMessageBg else OtherMessageBg)
                 .padding(horizontal = 12.dp, vertical = 8.dp),

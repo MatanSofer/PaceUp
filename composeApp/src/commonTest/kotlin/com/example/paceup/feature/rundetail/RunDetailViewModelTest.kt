@@ -26,6 +26,7 @@ class RunDetailViewModelTest {
     private lateinit var fakeRunRepo: FakeRunRepository
     private lateinit var fakeAuthRepo: FakeAuthRepositoryForDetail
     private lateinit var fakeUserRepo: FakeUserRepository
+    private lateinit var fakeReportRepo: FakeReportRepository
     private lateinit var viewModel: RunDetailViewModel
 
     @BeforeTest
@@ -34,10 +35,12 @@ class RunDetailViewModelTest {
         fakeRunRepo = FakeRunRepository()
         fakeAuthRepo = FakeAuthRepositoryForDetail()
         fakeUserRepo = FakeUserRepository()
+        fakeReportRepo = FakeReportRepository()
         viewModel = RunDetailViewModel(
             fakeRunRepo,
             fakeAuthRepo,
             fakeUserRepo,
+            fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
     }
@@ -63,7 +66,7 @@ class RunDetailViewModelTest {
     fun init_runLoadFailure_setsErrorAndNoRun() = runTest {
         fakeRunRepo.runByIdResult = Result.Error(RunError.NOT_FOUND)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "bad-id")),
         )
         assertNotNull(vm.state.value.error)
@@ -75,7 +78,7 @@ class RunDetailViewModelTest {
     fun init_participantsLoadFailure_stillShowsRunWithEmptyList() = runTest {
         fakeRunRepo.observeParticipantsFlow = kotlinx.coroutines.flow.emptyFlow()
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         assertNotNull(vm.state.value.run)
@@ -87,7 +90,7 @@ class RunDetailViewModelTest {
     fun init_reputationTierActive_canJoinIsTrue() = runTest {
         fakeUserRepo.reputationTierResult = Result.Success("active")
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         assertTrue(vm.state.value.canJoin)
@@ -98,7 +101,7 @@ class RunDetailViewModelTest {
         fakeUserRepo.reputationTierResult = Result.Success("new_runner")
         // fakeRun has verifiedOnly = true
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         // fakeRun.verifiedOnly = true and tier = new_runner → canJoin should be false
@@ -110,7 +113,7 @@ class RunDetailViewModelTest {
         // Set the current user as the run creator
         fakeAuthRepo.currentUser = fakeAuthRepo.currentUser?.copy(id = fakeRun.creatorId)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         assertTrue(vm.state.value.isCreator)
@@ -143,7 +146,7 @@ class RunDetailViewModelTest {
         fakeRunRepo.runByIdResult = Result.Success(requestRun)
         fakeRunRepo.requestToJoinResult = Result.Success(Unit)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         vm.onAction(RunDetailAction.OnJoinClick)
@@ -162,7 +165,7 @@ class RunDetailViewModelTest {
     fun onJoinClick_whenCanJoinFalse_doesNothing() = runTest {
         fakeUserRepo.reputationTierResult = Result.Success("new_runner")
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         // fakeRun.verifiedOnly = true → canJoin = false
@@ -192,7 +195,7 @@ class RunDetailViewModelTest {
     fun onAcceptParticipant_success_triggersParticipantRefresh() = runTest {
         fakeAuthRepo.currentUser = fakeAuthRepo.currentUser?.copy(id = fakeRun.creatorId)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         assertTrue(vm.state.value.isCreator)
@@ -205,7 +208,7 @@ class RunDetailViewModelTest {
     fun onDeclineParticipant_success_triggersParticipantRefresh() = runTest {
         fakeAuthRepo.currentUser = fakeAuthRepo.currentUser?.copy(id = fakeRun.creatorId)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         fakeRunRepo.declineParticipantResult = Result.Success(Unit)
@@ -231,7 +234,7 @@ class RunDetailViewModelTest {
     fun onCancelRunClick_showsCancelDialog() = runTest {
         fakeAuthRepo.currentUser = fakeAuthRepo.currentUser?.copy(id = fakeRun.creatorId)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         vm.onAction(RunDetailAction.OnCancelRunClick)
@@ -242,7 +245,7 @@ class RunDetailViewModelTest {
     fun onDismissCancelRunDialog_hidesCancelDialog() = runTest {
         fakeAuthRepo.currentUser = fakeAuthRepo.currentUser?.copy(id = fakeRun.creatorId)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         vm.onAction(RunDetailAction.OnCancelRunClick)
@@ -255,7 +258,7 @@ class RunDetailViewModelTest {
         fakeAuthRepo.currentUser = fakeAuthRepo.currentUser?.copy(id = fakeRun.creatorId)
         fakeRunRepo.cancelRunResult = Result.Success(Unit)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         vm.onAction(RunDetailAction.OnConfirmCancelRun("Weather too bad"))
@@ -273,7 +276,7 @@ class RunDetailViewModelTest {
         fakeAuthRepo.currentUser = fakeAuthRepo.currentUser?.copy(id = fakeRun.creatorId)
         fakeRunRepo.cancelRunResult = Result.Error(RunError.NETWORK_ERROR)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         vm.onAction(RunDetailAction.OnConfirmCancelRun("reason"))
@@ -285,7 +288,7 @@ class RunDetailViewModelTest {
     fun onDismissCancelRunError_clearsCancelRunError() = runTest {
         fakeRunRepo.cancelRunResult = Result.Error(RunError.NETWORK_ERROR)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         vm.onAction(RunDetailAction.OnConfirmCancelRun("reason"))
@@ -300,7 +303,7 @@ class RunDetailViewModelTest {
     fun onRetry_reloadsRunAndParticipants() = runTest {
         fakeRunRepo.runByIdResult = Result.Error(RunError.NETWORK_ERROR)
         val vm = RunDetailViewModel(
-            fakeRunRepo, fakeAuthRepo, fakeUserRepo,
+            fakeRunRepo, fakeAuthRepo, fakeUserRepo, fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         assertNotNull(vm.state.value.error)

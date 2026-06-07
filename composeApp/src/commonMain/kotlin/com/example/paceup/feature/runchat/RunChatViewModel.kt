@@ -3,10 +3,13 @@ package com.example.paceup.feature.runchat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.paceup.feature.report.ReportTarget
 import com.example.paceup.shared.auth.domain.AuthRepository
 import com.example.paceup.shared.network.result.Result
 import com.example.paceup.shared.runmatching.domain.ChatMessage
 import com.example.paceup.shared.runmatching.domain.ChatRepository
+import com.example.paceup.shared.runmatching.domain.ReportParams
+import com.example.paceup.shared.runmatching.domain.ReportRepository
 import com.example.paceup.ui.UiText
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +28,10 @@ data class RunChatState(
     val isOffline: Boolean = false,
     val currentUserId: String? = null,
     val error: UiText? = null,
+    /** Non-null when the report dialog is open for a specific message. */
+    val reportTarget: ReportTarget? = null,
+    val isReportSubmitting: Boolean = false,
+    val isReportSuccess: Boolean = false,
 )
 
 sealed interface RunChatAction {
@@ -33,16 +40,22 @@ sealed interface RunChatAction {
     data object OnSendClick : RunChatAction
     data object OnRetry : RunChatAction
     data object OnDismissError : RunChatAction
+    /** Long-pressed a message from another user — open the report dialog. */
+    data class OnLongPressMessage(val message: ChatMessage) : RunChatAction
+    /** User submitted the report form. */
+    data class OnSubmitReport(val reason: String, val description: String) : RunChatAction
+    data object OnDismissReport : RunChatAction
 }
 
 sealed interface RunChatEvent {
     data object NavigateBack : RunChatEvent
 }
 
-/** Loads run chat history and subscribes to Supabase Realtime for live messages. */
+/** Loads run chat history, subscribes to Supabase Realtime for live messages, and handles message reporting. */
 class RunChatViewModel(
     private val chatRepository: ChatRepository,
     private val authRepository: AuthRepository,
+    private val reportRepository: ReportRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -72,6 +85,24 @@ class RunChatViewModel(
                 loadHistory()
             }
             RunChatAction.OnDismissError -> _state.update { it.copy(error = null) }
+            is RunChatAction.OnLongPressMessage -> {
+                val message = action.message
+                if (message.userId != _state.value.currentUserId) {
+                    _state.update {
+                        it.copy(
+                            reportTarget = ReportTarget.Message(
+                                senderId = message.userId,
+                                senderName = message.senderName,
+                                messageContent = message.content,
+                            )
+                        )
+                    }
+                }
+            }
+            is RunChatAction.OnSubmitReport -> submitReport(action.reason, action.description)
+            RunChatAction.OnDismissReport -> _state.update {
+                it.copy(reportTarget = null, isReportSuccess = false)
+            }
         }
     }
 
@@ -109,6 +140,25 @@ class RunChatViewModel(
                         _state.update { it.copy(messages = it.messages + message) }
                     }
                 }
+        }
+    }
+
+    private fun submitReport(reason: String, description: String) {
+        val target = _state.value.reportTarget as? ReportTarget.Message ?: return
+        viewModelScope.launch {
+            _state.update { it.copy(isReportSubmitting = true) }
+            reportRepository.submitReport(
+                ReportParams(
+                    reportType = "message",
+                    reportedUserId = target.senderId,
+                    reason = reason,
+                    description = buildString {
+                        append("Message: \"${target.messageContent}\"")
+                        if (description.isNotBlank()) append("\n\n$description")
+                    },
+                )
+            )
+            _state.update { it.copy(isReportSubmitting = false, isReportSuccess = true) }
         }
     }
 

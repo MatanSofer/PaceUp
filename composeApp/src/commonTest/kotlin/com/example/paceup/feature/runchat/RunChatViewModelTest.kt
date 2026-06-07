@@ -2,6 +2,7 @@ package com.example.paceup.feature.runchat
 
 import androidx.lifecycle.SavedStateHandle
 import com.example.paceup.feature.rundetail.FakeAuthRepositoryForDetail
+import com.example.paceup.feature.rundetail.FakeReportRepository
 import com.example.paceup.shared.network.error.RunError
 import com.example.paceup.shared.network.result.Result
 import com.example.paceup.shared.runmatching.domain.ChatMessage
@@ -27,6 +28,7 @@ class RunChatViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var fakeChatRepo: FakeChatRepository
     private lateinit var fakeAuthRepo: FakeAuthRepositoryForDetail
+    private lateinit var fakeReportRepo: FakeReportRepository
     private lateinit var viewModel: RunChatViewModel
 
     @BeforeTest
@@ -34,9 +36,11 @@ class RunChatViewModelTest {
         Dispatchers.setMain(testDispatcher)
         fakeChatRepo = FakeChatRepository()
         fakeAuthRepo = FakeAuthRepositoryForDetail()
+        fakeReportRepo = FakeReportRepository()
         viewModel = RunChatViewModel(
             fakeChatRepo,
             fakeAuthRepo,
+            fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
     }
@@ -64,6 +68,7 @@ class RunChatViewModelTest {
         val vm = RunChatViewModel(
             fakeChatRepo,
             fakeAuthRepo,
+            fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         assertTrue(vm.state.value.isOffline)
@@ -156,6 +161,7 @@ class RunChatViewModelTest {
         val vm = RunChatViewModel(
             fakeChatRepo,
             fakeAuthRepo,
+            fakeReportRepo,
             SavedStateHandle(mapOf("runId" to "run-1")),
         )
         assertTrue(vm.state.value.isOffline)

@@ -21,11 +21,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.paceup.feature.home.formatPaceRange
+import com.example.paceup.feature.report.ReportDialog
 import com.example.paceup.shared.runmatching.domain.Run
 import com.example.paceup.shared.runmatching.domain.UserProfile
 import com.example.paceup.ui.ObserveAsEvents
@@ -114,7 +120,7 @@ fun UserProfileScreen(
                 .padding(12.dp),
         )
 
-        // Block / Unblock button — top-right (only for other users' profiles)
+        // Overflow menu — top-right (only for other users' profiles)
         if (!state.isOwnProfile && state.profile != null) {
             if (state.isBlockLoading) {
                 CircularProgressIndicator(
@@ -126,17 +132,12 @@ fun UserProfileScreen(
                         .padding(16.dp)
                         .size(24.dp),
                 )
-            } else if (state.isBlockedByMe) {
-                UnblockButton(
-                    onClick = { onAction(UserProfileAction.OnUnblockClick) },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .systemBarsPadding()
-                        .padding(12.dp),
-                )
             } else {
-                BlockButton(
-                    onClick = { onAction(UserProfileAction.OnBlockClick) },
+                ProfileOverflowMenu(
+                    isBlockedByMe = state.isBlockedByMe,
+                    onBlock = { onAction(UserProfileAction.OnBlockClick) },
+                    onUnblock = { onAction(UserProfileAction.OnUnblockClick) },
+                    onReport = { onAction(UserProfileAction.OnReportUserClick) },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .systemBarsPadding()
@@ -144,6 +145,18 @@ fun UserProfileScreen(
                 )
             }
         }
+    }
+
+    // Report dialog
+    val reportTarget = state.reportTarget
+    if (reportTarget != null) {
+        ReportDialog(
+            target = reportTarget,
+            isSubmitting = state.isReportSubmitting,
+            isSuccess = state.isReportSuccess,
+            onSubmit = { reason, desc -> onAction(UserProfileAction.OnSubmitReport(reason, desc)) },
+            onDismiss = { onAction(UserProfileAction.OnDismissReport) },
+        )
     }
 
     // Block confirmation dialog
@@ -584,31 +597,47 @@ private fun BackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun BlockButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(ErrorRed.copy(alpha = 0.12f))
-            .border(1.dp, ErrorRed.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-    ) {
-        Text(text = "Block", color = ErrorRed, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-private fun UnblockButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-    ) {
-        Text(text = "Unblock", color = TextMuted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+private fun ProfileOverflowMenu(
+    isBlockedByMe: Boolean,
+    onBlock: () -> Unit,
+    onUnblock: () -> Unit,
+    onReport: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(SurfaceColor.copy(alpha = 0.9f))
+                .border(1.dp, DividerColor, CircleShape)
+                .clickable { expanded = true },
+        ) {
+            Text(text = "⋯", color = TextPrimary, fontSize = 18.sp)
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = SurfaceColor,
+        ) {
+            if (isBlockedByMe) {
+                DropdownMenuItem(
+                    text = { Text("Unblock", color = TextPrimary, fontSize = 14.sp) },
+                    onClick = { expanded = false; onUnblock() },
+                )
+            } else {
+                DropdownMenuItem(
+                    text = { Text("Block", color = ErrorRed, fontSize = 14.sp) },
+                    onClick = { expanded = false; onBlock() },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text("Report", color = TextPrimary, fontSize = 14.sp) },
+                onClick = { expanded = false; onReport() },
+            )
+        }
     }
 }
 

@@ -3,8 +3,11 @@ package com.example.paceup.feature.rundetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.paceup.feature.report.ReportTarget
 import com.example.paceup.shared.auth.domain.AuthRepository
 import com.example.paceup.shared.network.result.Result
+import com.example.paceup.shared.runmatching.domain.ReportParams
+import com.example.paceup.shared.runmatching.domain.ReportRepository
 import com.example.paceup.shared.runmatching.domain.Run
 import com.example.paceup.shared.runmatching.domain.RunParticipant
 import com.example.paceup.shared.runmatching.domain.RunRepository
@@ -47,6 +50,10 @@ data class RunDetailState(
     val cancelRunError: UiText? = null,
     /** True when the current user's attendance was verified by Strava (status == "attended"). */
     val userAttended: Boolean = false,
+    /** Non-null when the report dialog is open. */
+    val reportTarget: ReportTarget? = null,
+    val isReportSubmitting: Boolean = false,
+    val isReportSuccess: Boolean = false,
 )
 
 sealed interface RunDetailAction {
@@ -74,6 +81,11 @@ sealed interface RunDetailAction {
     data class OnParticipantClick(val userId: String) : RunDetailAction
     /** Attended user taps "Rate partners". */
     data object OnRatePartnersClick : RunDetailAction
+    /** Non-creator taps "Report Run". */
+    data object OnReportRunClick : RunDetailAction
+    /** User submitted the report form. */
+    data class OnSubmitReport(val reason: String, val description: String) : RunDetailAction
+    data object OnDismissReport : RunDetailAction
 }
 
 sealed interface RunDetailEvent {
@@ -84,11 +96,12 @@ sealed interface RunDetailEvent {
     data class NavigateToRatePartners(val runId: String, val runTitle: String) : RunDetailEvent
 }
 
-/** Loads run detail, manages join/cancel/accept/decline participant flows. */
+/** Loads run detail, manages join/cancel/accept/decline participant flows, and reporting. */
 class RunDetailViewModel(
     private val runRepository: RunRepository,
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
+    private val reportRepository: ReportRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -125,6 +138,16 @@ class RunDetailViewModel(
                 _events.send(RunDetailEvent.NavigateToUserProfile(action.userId))
             }
             RunDetailAction.OnRatePartnersClick -> handleRatePartnersClick()
+            RunDetailAction.OnReportRunClick -> {
+                val run = _state.value.run ?: return
+                _state.update {
+                    it.copy(reportTarget = ReportTarget.Run(run.id, run.title ?: "Run"))
+                }
+            }
+            is RunDetailAction.OnSubmitReport -> submitReport(action.reason, action.description)
+            RunDetailAction.OnDismissReport -> _state.update {
+                it.copy(reportTarget = null, isReportSuccess = false)
+            }
         }
     }
 
@@ -290,6 +313,22 @@ class RunDetailViewModel(
                 participants = all.filter { p -> p.status == "accepted" },
                 pendingRequests = if (isCreator) all.filter { p -> p.status == "requested" } else emptyList(),
             )
+        }
+    }
+
+    private fun submitReport(reason: String, description: String) {
+        val target = _state.value.reportTarget as? ReportTarget.Run ?: return
+        viewModelScope.launch {
+            _state.update { it.copy(isReportSubmitting = true) }
+            reportRepository.submitReport(
+                ReportParams(
+                    reportType = "run",
+                    reportedRunId = target.runId,
+                    reason = reason,
+                    description = description.takeIf { it.isNotBlank() },
+                )
+            )
+            _state.update { it.copy(isReportSubmitting = false, isReportSuccess = true) }
         }
     }
 }

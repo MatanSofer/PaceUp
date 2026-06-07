@@ -220,6 +220,20 @@ private fun RunDetailContent(
                 Spacer(Modifier.height(16.dp))
                 DescriptionSection(description = description)
             }
+
+            // ── Report link (non-creator only) ───────────────────────────────
+            if (!state.isCreator) {
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = "Report this run",
+                    color = TextMuted,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onAction(RunDetailAction.OnReportRunClick) }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
         }
 
         // ── Sticky bottom action ──────────────────────────────────────────────
@@ -251,6 +265,18 @@ private fun RunDetailContent(
         CancelRunDialog(
             onConfirm = { reason -> onAction(RunDetailAction.OnConfirmCancelRun(reason)) },
             onDismiss = { onAction(RunDetailAction.OnDismissCancelRunDialog) },
+        )
+    }
+
+    // Report dialog
+    val reportTarget = state.reportTarget
+    if (reportTarget != null) {
+        com.example.paceup.feature.report.ReportDialog(
+            target = reportTarget,
+            isSubmitting = state.isReportSubmitting,
+            isSuccess = state.isReportSuccess,
+            onSubmit = { reason, desc -> onAction(RunDetailAction.OnSubmitReport(reason, desc)) },
+            onDismiss = { onAction(RunDetailAction.OnDismissReport) },
         )
     }
 }

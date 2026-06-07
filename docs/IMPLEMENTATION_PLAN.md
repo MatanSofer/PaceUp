@@ -1300,7 +1300,15 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 1.2
 - **Deliverable:** Report button on user profiles, run cards, and chat messages. Saved to reports table. Reporter sees confirmation. Reported user not notified.
 
-- [ ] Done
+- [x] Done
+  - `reports` table with RLS: authenticated INSERT + SELECT own rows; no UPDATE/DELETE for users
+  - `ReportRepository` interface + `SupabaseReportRepository` in `shared/runMatching`
+  - `ReportTarget` sealed class (User/Run/Message) with per-type reason lists (spec §6.2 tables)
+  - `ReportDialog` composable: reason chip selection, optional description field, success confirmation screen
+  - `UserProfileViewModel/Screen`: ⋯ overflow menu with Block + Report options; AlertDialog confirmation
+  - `RunDetailViewModel/Screen`: "Report this run" text link at bottom for non-creator viewers
+  - `RunChatViewModel/Screen`: long-press on another user's message opens report dialog
+  - `FakeReportRepository` test double; updated `RunDetailViewModelTest` + `RunChatViewModelTest`
 
 ---
 
