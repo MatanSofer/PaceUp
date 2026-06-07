@@ -1279,7 +1279,16 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 1.2 (user_blocks table), Task 1.3 (RLS)
 - **Deliverable:** Block from profile or participant list. Blocked users invisible in discovery, runs, and chat. Block list manageable from settings.
 
-- [ ] Done
+- [x] Done
+  - `user_blocks` table with RLS (blocker sees only own rows; self-block prevented by CHECK)
+  - `fn_is_blocked(a,b)` SECURITY DEFINER function for mutual check bypassing RLS
+  - `fn_get_blocked_users()` SECURITY DEFINER RPC for the blocked list screen
+  - RESTRICTIVE SELECT policies on `runs` and `users` tables enforce mutual invisibility
+  - `BlockRepository` interface + `SupabaseBlockRepository` in `shared/runMatching`
+  - `UserProfileViewModel` extended: `isBlockedByMe`, `showBlockConfirm` state; block/unblock actions
+  - `UserProfileScreen` extended: Block/Unblock button top-right; confirmation AlertDialog
+  - `BlockedUsersViewModel` + `BlockedUsersScreen` (Settings → Privacy → Blocked Users)
+  - `BlockedUsersRoute` wired in nav graph; `BlockedUsersViewModel` in Koin
 
 ---
 

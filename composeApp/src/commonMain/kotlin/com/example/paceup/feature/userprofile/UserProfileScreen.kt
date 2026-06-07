@@ -19,9 +19,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -48,6 +50,7 @@ private val TextMuted = Color(0xFF9CA3AF)
 private val PrimaryBlue = Color(0xFF1A73E8)
 private val SuccessGreen = Color(0xFF10B981)
 private val AccentOrange = Color(0xFFFC4C02)
+private val ErrorRed = Color(0xFFA32D2D)
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 
@@ -98,18 +101,74 @@ fun UserProfileScreen(
                 )
             }
             state.profile != null -> {
-                ProfileContent(
-                    state = state,
-                )
+                ProfileContent(state = state)
             }
         }
 
+        // Back button — top-left
         BackButton(
             onClick = { onAction(UserProfileAction.OnBackClick) },
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .systemBarsPadding()
                 .padding(12.dp),
+        )
+
+        // Block / Unblock button — top-right (only for other users' profiles)
+        if (!state.isOwnProfile && state.profile != null) {
+            if (state.isBlockLoading) {
+                CircularProgressIndicator(
+                    color = ErrorRed,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .systemBarsPadding()
+                        .padding(16.dp)
+                        .size(24.dp),
+                )
+            } else if (state.isBlockedByMe) {
+                UnblockButton(
+                    onClick = { onAction(UserProfileAction.OnUnblockClick) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .systemBarsPadding()
+                        .padding(12.dp),
+                )
+            } else {
+                BlockButton(
+                    onClick = { onAction(UserProfileAction.OnBlockClick) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .systemBarsPadding()
+                        .padding(12.dp),
+                )
+            }
+        }
+    }
+
+    // Block confirmation dialog
+    if (state.showBlockConfirm) {
+        AlertDialog(
+            onDismissRequest = { onAction(UserProfileAction.OnDismissBlockDialog) },
+            title = { Text("Block ${state.profile?.displayName ?: "this user"}?") },
+            text = {
+                Text(
+                    "They won't be able to see your runs or contact you. You can unblock them any time from Settings → Privacy.",
+                    color = TextMuted,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { onAction(UserProfileAction.OnConfirmBlock) }) {
+                    Text("Block", color = ErrorRed, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onAction(UserProfileAction.OnDismissBlockDialog) }) {
+                    Text("Cancel", color = TextMuted)
+                }
+            },
+            containerColor = SurfaceColor,
+            titleContentColor = TextPrimary,
         )
     }
 }
@@ -521,6 +580,35 @@ private fun BackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .clickable { onClick() },
     ) {
         Text(text = "←", color = TextPrimary, fontSize = 18.sp)
+    }
+}
+
+@Composable
+private fun BlockButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(ErrorRed.copy(alpha = 0.12f))
+            .border(1.dp, ErrorRed.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        Text(text = "Block", color = ErrorRed, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun UnblockButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        Text(text = "Unblock", color = TextMuted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
