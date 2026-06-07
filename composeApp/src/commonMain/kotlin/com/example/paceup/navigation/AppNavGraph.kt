@@ -13,6 +13,7 @@ import androidx.navigation.toRoute
 import com.example.paceup.feature.createrun.CreateRunRoot
 import com.example.paceup.feature.home.HomeRoot
 import com.example.paceup.feature.partnerrating.PartnerRatingRoot
+import com.example.paceup.feature.rivaldashboard.RivalDashboardRoot
 import com.example.paceup.feature.runchat.RunChatRoot
 import com.example.paceup.feature.rundetail.RunDetailRoot
 import com.example.paceup.feature.search.SearchRoot
@@ -164,7 +165,7 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         UserProfileRoot(onNavigateBack = { navController.popBackStack() })
     }
     composable<RivalDashboardRoute> {
-        StubScreen("Rival Dashboard")
+        RivalDashboardRoot(onNavigateBack = { navController.popBackStack() })
     }
     composable<SettingsRoute> {
         StubScreen("Settings") { navController.navigate(SettingsAccountRoute) }

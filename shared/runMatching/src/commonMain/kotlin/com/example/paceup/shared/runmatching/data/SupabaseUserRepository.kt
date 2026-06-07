@@ -105,6 +105,26 @@ class SupabaseUserRepository(private val supabase: SupabaseClient) : UserReposit
         )
     }
 
+    override suspend fun getUserSummary(userId: String): Result<UserSummary?, AppError> {
+        AppLogger.d(TAG, "getUserSummary userId=$userId")
+        return runCatching {
+            supabase.postgrest[TABLE]
+                .select(Columns.raw("id, display_name, avatar_url, pace_zone, show_up_rate")) {
+                    filter { eq("id", userId) }
+                    limit(1)
+                }
+                .decodeList<UserSearchDto>()
+                .firstOrNull()
+                ?.toDomain()
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "getUserSummary failed: ${e.message}")
+                Result.Error(RunError.NETWORK_ERROR)
+            }
+        )
+    }
+
     override suspend fun getUserProfile(userId: String): Result<UserProfile, AppError> {
         AppLogger.d(TAG, "getUserProfile userId=$userId")
         return runCatching {

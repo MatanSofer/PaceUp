@@ -24,4 +24,11 @@ interface UserRepository {
      * Used to render the profile screen for both the current user and other runners.
      */
     suspend fun getUserProfile(userId: String): Result<UserProfile, AppError>
+
+    /**
+     * Returns a lightweight [UserSummary] for [userId].
+     * Used when only display name, avatar, and pace zone are needed (e.g. rival cards).
+     * Returns null if the user row does not exist.
+     */
+    suspend fun getUserSummary(userId: String): Result<UserSummary?, AppError>
 }

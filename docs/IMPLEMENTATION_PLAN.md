@@ -1085,7 +1085,12 @@ fun observeParticipants(runId: String): Flow<List<RunParticipant>>
 - If actual post-run pace is >2 min/km outside stated zone on 3+ consecutive runs:
   force-recalculate zone + set admin alert flag in users table
 
-- [ ] Done
+- [x] Done
+  - `admin_alert_pace_outlier boolean DEFAULT false` added to users table (migration 20260607_weekly_pace_zone_update.sql)
+  - `weekly_pace_zone_update` Edge Function: fetches all strava_connected users, refreshes tokens, fetches 90-day activities, recalculates pace zone with same algorithm as PaceZoneCalculator.kt (time-weighted avg, A–E boundaries, >3km filter)
+  - Updates users.pace_zone, avg_pace_seconds, weekly_mileage_avg each Monday 03:00 UTC
+  - Pace outlier detection (spec §6.3): if last 3 consecutive attended runs all deviate >120 sec/km from pre-update stated pace → sets admin_alert_pace_outlier=true
+  - Deployment pending: run `supabase functions deploy weekly_pace_zone_update --no-verify-jwt`
 
 ---
 
@@ -1114,7 +1119,14 @@ fun observeRivalRequest(): Flow<Rival>
 
 **Note:** getSuggestedRivals() is deferred to Bucket B.
 
-- [ ] Done
+- [x] Done
+  - `Rival` + `RivalWeeklySnapshot` domain models in `shared/rivalEngine/domain/`
+  - `RivalRepository` interface: sendRivalRequest, acceptRivalRequest, declineRivalRequest, getRivals, observeRivalRequest, getLatestSnapshot
+  - `RivalDto`, `InsertRivalDto`, `UpdateRivalStatusDto`, `RivalWeeklySnapshotDto` in `shared/rivalEngine/data/`
+  - `SupabaseRivalRepository`: getRivals uses two-query approach (asA + asB, distinctBy id — safe with max-5 limit); observeRivalRequest uses Supabase Realtime with in-Flow filtering (same pattern as chat)
+  - `rivalEngineModule` Koin binding in `shared/rivalEngine/RivalEngineModule.kt`; added to `sharedModules` in AppModules.kt
+  - `shared:rivalEngine` added as composeApp dependency; build.gradle.kts updated with kotlinSerialization plugin + supabase/koin deps
+  - Build verified: `./gradlew :androidApp:assembleDebug` — BUILD SUCCESSFUL
 
 ---
 
@@ -1128,7 +1140,17 @@ fun observeRivalRequest(): Flow<Rival>
 
 **Note:** Historical sparkline deferred to Bucket B.
 
-- [ ] Done
+- [x] Done
+  - `RivalWithDetails` UI model (rival + snapshot + opponent summary + isIncoming flag) in ViewModel file
+  - `RivalDashboardState/Action/Event` + `RivalDashboardViewModel`: loads rivals, fetches per-rival snapshots + opponent profiles, observes Realtime incoming requests
+  - `getUserSummary(userId)` added to UserRepository interface + SupabaseUserRepository (reuses UserSearchDto, min-column query)
+  - `RivalDashboardScreen`: scoreboard card (two avatars + VS + weekly km + progress bar + stat row + streak indicator + win record), incoming request cards (accept/decline), outgoing pending cards, empty state
+  - "Add Rival" ModalBottomSheet with live search (debounce implicit via Koin + coroutines); send request → reload list
+  - Streak indicator (flame icon) shown only when streak >= 3 weeks
+  - Leader highlighted: glow border on avatar + bold km number
+  - `RivalDashboardRoot` wired into AppNavGraph replacing stub
+  - `RivalDashboardViewModel` added to presentationModule
+  - Build verified: `./gradlew :androidApp:assembleDebug` — BUILD SUCCESSFUL
 
 ---
 
@@ -1139,7 +1161,12 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 7.1, Task 2.1
 - **Deliverable:** Edge Function deployed and scheduled.
 
-- [ ] Done
+- [x] Done
+  - `rival_weekly_snapshot` Edge Function at `supabase/functions/rival_weekly_snapshot/index.ts`
+  - Logic: fetches active rival pairs → batch-fetches Strava tokens → per-user weekly stats (totalKm, runCount, bestPace) → determines winner (most km) → upserts rival_weekly_snapshots → updates rivals (wins, streak)
+  - Streak logic: winner matches current_streak → increment; different winner → reset to 1; tied → reset to 0
+  - Migration: unique constraint on (rival_id, week_start) for idempotent upsert; pg_cron every Monday 04:00 UTC
+  - Deployment pending: run `supabase functions deploy rival_weekly_snapshot --no-verify-jwt`
 
 ---
 
@@ -1179,7 +1206,12 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 8.1
 - **Deliverable:** Joining a confirmed run schedules two notifications. Both arrive on device.
 
-- [ ] Done
+- [x] Done
+  - PostgreSQL trigger `schedule_run_reminders()` on `run_participants` fires after INSERT or UPDATE to status='accepted'
+  - Inserts two `notifications` rows: 24h and 2h before `runs.scheduled_at`
+  - WHERE NOT EXISTS guard prevents duplicate notifications on re-accepts
+  - Migration applied: `20260607_run_reminder_notifications.sql`
+  - Existing `notification_dispatcher` Edge Function picks them up and delivers via FCM — no new Edge Function needed
 
 ---
 

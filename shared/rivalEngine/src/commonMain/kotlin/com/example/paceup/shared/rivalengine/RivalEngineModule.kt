@@ -1,4 +1,10 @@
 package com.example.paceup.shared.rivalengine
 
-// TODO(paceup): implement rival weekly stats logic in Task 7.1
-internal object RivalEngineModule
+import com.example.paceup.shared.rivalengine.data.SupabaseRivalRepository
+import com.example.paceup.shared.rivalengine.domain.RivalRepository
+import org.koin.dsl.module
+
+/** Koin bindings for the rival system. Requires [SupabaseClient] from supabaseModule. */
+val rivalEngineModule = module {
+    single<RivalRepository> { SupabaseRivalRepository(get()) }
+}

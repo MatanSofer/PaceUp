@@ -20,4 +20,7 @@ class FakeUserRepository : UserRepository {
 
     override suspend fun getUserProfile(userId: String): Result<UserProfile, AppError> =
         userProfileResult
+
+    override suspend fun getUserSummary(userId: String): Result<UserSummary?, AppError> =
+        Result.Success(null)
 }
