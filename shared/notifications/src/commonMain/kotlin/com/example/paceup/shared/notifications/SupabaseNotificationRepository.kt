@@ -63,4 +63,52 @@ class SupabaseNotificationRepository(private val client: SupabaseClient) : Notif
             }
         )
     }
+
+    override suspend fun getPreferences(): Result<NotificationPreferences, AppError> {
+        AppLogger.d(TAG, "getPreferences enter")
+        val userId = client.auth.currentUserOrNull()?.id ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            val dto = client.postgrest[TABLE]
+                .select(io.github.jan.supabase.postgrest.query.Columns.raw(
+                    "notif_run_reminders, notif_join_requests, notif_rival_nudges, " +
+                    "notif_rival_summary, notif_new_runs, notif_partner_ratings, notif_marketing"
+                )) {
+                    filter { eq("id", userId) }
+                }
+                .decodeSingle<NotificationPreferencesDto>()
+            AppLogger.i(TAG, "getPreferences success userId=$userId")
+            dto.toDomain()
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "getPreferences failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
+
+    override suspend fun updatePreferences(prefs: NotificationPreferences): EmptyResult<AppError> {
+        AppLogger.d(TAG, "updatePreferences enter")
+        val userId = client.auth.currentUserOrNull()?.id ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            val row = buildJsonObject {
+                put("id", userId)
+                put("notif_run_reminders",   prefs.runReminders)
+                put("notif_join_requests",    prefs.joinRequests)
+                put("notif_rival_nudges",     prefs.rivalNudges)
+                put("notif_rival_summary",    prefs.rivalSummary)
+                put("notif_new_runs",         prefs.newRuns)
+                put("notif_partner_ratings",  prefs.partnerRatings)
+                put("notif_marketing",        prefs.marketing)
+            }
+            client.postgrest[TABLE].upsert(row)
+            AppLogger.i(TAG, "updatePreferences success userId=$userId")
+        }.fold(
+            onSuccess = { Result.Success(Unit) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "updatePreferences failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
 }

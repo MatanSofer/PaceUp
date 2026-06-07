@@ -1222,7 +1222,11 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 8.1, Task 7.3
 - **Deliverable:** Rival activity triggers notification. Sunday summary sent.
 
-- [ ] Done
+- [x] Done
+  - `notify_rival_ran()` trigger fires on `run_participants` UPDATE to 'attended'; inserts `rival_nudge` notifications for all active rivals
+  - `insert_rival_weekly_summaries()` function + pg_cron schedule: every Sunday 19:00 UTC inserts `rival_weekly_summary` notifications
+  - Both use NOT EXISTS guard to prevent duplicates
+  - Migration applied: `20260607_rival_nudge_notifications.sql`
 
 ---
 
@@ -1233,7 +1237,11 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 8.1, Task 5.1
 - **Deliverable:** Join request triggers push to creator. Tapping opens the run's participant management view.
 
-- [ ] Done
+- [x] Done
+  - `notify_creator_join_request()` trigger fires on `run_participants` INSERT with status='pending'
+  - Inserts `join_request` notification for the run creator with data.run_id for deep link
+  - NOT EXISTS guard prevents duplicates per requester+run
+  - Migration applied: `20260607_join_request_notifications.sql`
 
 ---
 
@@ -1245,7 +1253,15 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 8.1
 - **Deliverable:** All toggles from spec functional. Preferences saved and respected by dispatcher.
 
-- [ ] Done
+- [x] Done
+  - Migration: 7 `notif_*` boolean columns added to `users` table (all default true)
+  - `NotificationPreferences` domain model + `NotificationPreferencesDto` in `shared/notifications`
+  - `NotificationRepository` extended: `getPreferences()` + `updatePreferences()`
+  - `SupabaseNotificationRepository` implements both — reads/writes via `upsert` on users table
+  - `NotificationPreferencesViewModel` + `NotificationPreferencesScreen` — 3 grouped sections (Running, Rivals, Other), toggles persist immediately on change with saving indicator
+  - Wired at `SettingsNotificationsRoute` in `AppNavGraph`
+  - `notification_dispatcher` Edge Function updated to check preference column per notification type before FCM delivery — skips and marks sent when user opted out
+  - Deploy: `supabase functions deploy notification_dispatcher` (manual, as before)
 
 ---
 

@@ -14,6 +14,7 @@ import com.example.paceup.feature.createrun.CreateRunRoot
 import com.example.paceup.feature.home.HomeRoot
 import com.example.paceup.feature.partnerrating.PartnerRatingRoot
 import com.example.paceup.feature.rivaldashboard.RivalDashboardRoot
+import com.example.paceup.feature.settings.NotificationPreferencesRoot
 import com.example.paceup.feature.runchat.RunChatRoot
 import com.example.paceup.feature.rundetail.RunDetailRoot
 import com.example.paceup.feature.search.SearchRoot
@@ -174,7 +175,7 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         StubScreen("Settings — Account")
     }
     composable<SettingsNotificationsRoute> {
-        StubScreen("Settings — Notifications")
+        NotificationPreferencesRoot(onNavigateBack = { navController.popBackStack() })
     }
     composable<SettingsPrivacyRoute> {
         StubScreen("Settings — Privacy")

@@ -17,13 +17,32 @@ const FCM_URL = "https://fcm.googleapis.com/fcm/send";
 interface NotificationRow {
   id: string;
   user_id: string;
+  type: string;
   title: string;
   body: string;
   data: Record<string, string> | null;
 }
 
+/** Notification type → users column mapping for preference checks. */
+const PREF_COLUMN: Record<string, string> = {
+  run_reminder:          "notif_run_reminders",
+  join_request:          "notif_join_requests",
+  rival_nudge:           "notif_rival_nudges",
+  rival_weekly_summary:  "notif_rival_summary",
+  new_matching_run:      "notif_new_runs",
+  partner_rating:        "notif_partner_ratings",
+  marketing:             "notif_marketing",
+};
+
 interface UserRow {
   push_token: string | null;
+  notif_run_reminders:  boolean;
+  notif_join_requests:  boolean;
+  notif_rival_nudges:   boolean;
+  notif_rival_summary:  boolean;
+  notif_new_runs:       boolean;
+  notif_partner_ratings: boolean;
+  notif_marketing:      boolean;
 }
 
 Deno.serve(async (_req) => {
@@ -32,7 +51,7 @@ Deno.serve(async (_req) => {
   // Fetch all unsent notifications scheduled for now or earlier
   const { data: notifications, error: fetchError } = await supabase
     .from("notifications")
-    .select("id, user_id, title, body, data")
+    .select("id, user_id, type, title, body, data")
     .eq("sent", false)
     .lte("scheduled_at", new Date().toISOString())
     .limit(100);
@@ -50,10 +69,14 @@ Deno.serve(async (_req) => {
   let failed = 0;
 
   for (const notification of notifications as NotificationRow[]) {
-    // Get the recipient's push token
+    // Get the recipient's push token and preference columns
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .select("push_token")
+      .select([
+        "push_token",
+        "notif_run_reminders", "notif_join_requests", "notif_rival_nudges",
+        "notif_rival_summary", "notif_new_runs", "notif_partner_ratings", "notif_marketing",
+      ].join(","))
       .eq("id", notification.user_id)
       .single();
 
@@ -64,6 +87,18 @@ Deno.serve(async (_req) => {
     }
 
     const user = userData as UserRow;
+
+    // Check user's notification preference for this type
+    const prefCol = PREF_COLUMN[notification.type];
+    if (prefCol && (user as Record<string, unknown>)[prefCol] === false) {
+      console.log(`notification_dispatcher: user opted out of ${notification.type} — skipping ${notification.id}`);
+      await supabase
+        .from("notifications")
+        .update({ sent: true, sent_at: new Date().toISOString() })
+        .eq("id", notification.id);
+      continue;
+    }
+
     if (!user.push_token) {
       console.warn(`No push_token for user ${notification.user_id} — skipping`);
       // Still mark as sent so we don't retry indefinitely for users without tokens
