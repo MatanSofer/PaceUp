@@ -1365,7 +1365,13 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 10.1
 - **Deliverable:** All account actions functional. Disconnecting Strava sets strava_connected=false and is_verified=false. Delete account wipes all user data. Export generates JSON (GDPR Article 20).
 
-- [ ] Done
+- [x] Done
+  - `AccountSettingsViewModel` (MVI: State/Action/Event) handles profile edit, email/password change, connected apps, delete account, data export
+  - `AccountSettingsScreen` + `AccountSettingsRoot` with profile, email, password, connected apps, and danger zone sections
+  - `AuthRepository` extended with `updateEmail`, `updatePassword`, `deleteAccount`; `UserRepository` extended with `getCurrentProfile`, `updateProfile`, `disconnectStrava`, `disconnectGarmin`, `exportUserData`
+  - `delete_account` Edge Function + `fn_export_user_data()` SQL function deployed (GDPR Article 20)
+  - `SettingsAccountRoute` in nav graph wired (replaces stub); `AccountSettingsViewModel` registered in Koin
+  - Fake test repositories updated to implement new interface methods; all tests pass
 
 ---
 

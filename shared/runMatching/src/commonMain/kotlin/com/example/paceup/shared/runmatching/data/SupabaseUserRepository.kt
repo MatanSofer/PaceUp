@@ -7,11 +7,17 @@ import com.example.paceup.shared.network.result.Result
 import com.example.paceup.shared.runmatching.domain.UserProfile
 import com.example.paceup.shared.runmatching.domain.UserRepository
 import com.example.paceup.shared.runmatching.domain.UserSummary
+import com.example.paceup.shared.network.error.NetworkError
+import com.example.paceup.shared.network.result.EmptyResult
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 private const val TAG = "SupabaseUserRepository"
 private const val TABLE = "users"
@@ -149,6 +155,91 @@ class SupabaseUserRepository(private val supabase: SupabaseClient) : UserReposit
                 AppLogger.e(TAG, "getUserProfile failed: ${e.message}")
                 val error = if (e is NoSuchElementException) RunError.NOT_FOUND else RunError.NETWORK_ERROR
                 Result.Error(error)
+            }
+        )
+    }
+
+    // ── Account management ────────────────────────────────────────────────────
+
+    override suspend fun getCurrentProfile(): Result<UserProfile, AppError> {
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return getUserProfile(userId)
+    }
+
+    override suspend fun updateProfile(displayName: String, bio: String?): EmptyResult<AppError> {
+        AppLogger.d(TAG, "updateProfile displayName=$displayName")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            val update = buildJsonObject {
+                put("display_name", displayName)
+                if (bio != null) put("bio", bio) else put("bio", JsonNull)
+            }
+            supabase.postgrest[TABLE].update(update) { filter { eq("id", userId) } }
+            AppLogger.i(TAG, "updateProfile success")
+        }.fold(
+            onSuccess = { Result.Success(Unit) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "updateProfile failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
+
+    override suspend fun disconnectStrava(): EmptyResult<AppError> {
+        AppLogger.d(TAG, "disconnectStrava")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            val update = buildJsonObject {
+                put("strava_connected", false)
+                put("is_verified", false)
+                put("strava_athlete_id", JsonNull)
+            }
+            supabase.postgrest[TABLE].update(update) { filter { eq("id", userId) } }
+            AppLogger.i(TAG, "disconnectStrava success")
+        }.fold(
+            onSuccess = { Result.Success(Unit) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "disconnectStrava failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
+
+    override suspend fun disconnectGarmin(): EmptyResult<AppError> {
+        AppLogger.d(TAG, "disconnectGarmin")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            val update = buildJsonObject {
+                put("garmin_connected", false)
+                put("garmin_user_id", JsonNull)
+            }
+            supabase.postgrest[TABLE].update(update) { filter { eq("id", userId) } }
+            AppLogger.i(TAG, "disconnectGarmin success")
+        }.fold(
+            onSuccess = { Result.Success(Unit) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "disconnectGarmin failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
+
+    override suspend fun exportUserData(): Result<String, AppError> {
+        AppLogger.d(TAG, "exportUserData")
+        return runCatching {
+            supabase.postgrest.rpc("fn_export_user_data").data
+        }.fold(
+            onSuccess = { json ->
+                AppLogger.i(TAG, "exportUserData success bytes=${json.length}")
+                Result.Success(json)
+            },
+            onFailure = { e ->
+                AppLogger.e(TAG, "exportUserData failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
             }
         )
     }

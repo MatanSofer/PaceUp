@@ -1,6 +1,7 @@
 package com.example.paceup.shared.runmatching.domain
 
 import com.example.paceup.shared.network.error.AppError
+import com.example.paceup.shared.network.result.EmptyResult
 import com.example.paceup.shared.network.result.Result
 
 /** Repository for user discovery — searching runners by display name. */
@@ -31,4 +32,21 @@ interface UserRepository {
      * Returns null if the user row does not exist.
      */
     suspend fun getUserSummary(userId: String): Result<UserSummary?, AppError>
+
+    // ── Account management (spec §5.2 Account) ────────────────────────────────
+
+    /** Returns the current signed-in user's full profile. */
+    suspend fun getCurrentProfile(): Result<UserProfile, AppError>
+
+    /** Updates [displayName] and [bio] for the current user. */
+    suspend fun updateProfile(displayName: String, bio: String?): EmptyResult<AppError>
+
+    /** Disconnects Strava: sets strava_connected=false and is_verified=false (spec §5.2). */
+    suspend fun disconnectStrava(): EmptyResult<AppError>
+
+    /** Disconnects Garmin: sets garmin_connected=false. is_verified remains if Strava active. */
+    suspend fun disconnectGarmin(): EmptyResult<AppError>
+
+    /** Calls fn_export_user_data() RPC and returns the result as a JSON string (GDPR §6.4). */
+    suspend fun exportUserData(): Result<String, AppError>
 }

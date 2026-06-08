@@ -15,4 +15,10 @@ interface AuthRepository {
     suspend fun signOut(): EmptyResult<AuthError>
     suspend fun getCurrentUser(): Result<AuthUser?, AuthError>
     suspend fun getSession(): Result<AuthSession?, AuthError>
+    /** Updates the signed-in user's email. Supabase sends a confirmation to the new address. */
+    suspend fun updateEmail(newEmail: String): EmptyResult<AuthError>
+    /** Updates the signed-in user's password immediately. */
+    suspend fun updatePassword(newPassword: String): EmptyResult<AuthError>
+    /** Permanently deletes the account and all associated data via the delete_account Edge Function. */
+    suspend fun deleteAccount(): EmptyResult<AuthError>
 }

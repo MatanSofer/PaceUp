@@ -14,6 +14,7 @@ import com.example.paceup.feature.createrun.CreateRunRoot
 import com.example.paceup.feature.home.HomeRoot
 import com.example.paceup.feature.partnerrating.PartnerRatingRoot
 import com.example.paceup.feature.rivaldashboard.RivalDashboardRoot
+import com.example.paceup.feature.settings.AccountSettingsRoot
 import com.example.paceup.feature.settings.BlockedUsersRoot
 import com.example.paceup.feature.settings.NotificationPreferencesRoot
 import com.example.paceup.feature.settings.SettingsRoot
@@ -183,7 +184,15 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         )
     }
     composable<SettingsAccountRoute> {
-        StubScreen("Settings — Account")
+        AccountSettingsRoot(
+            onNavigateBack = { navController.popBackStack() },
+            onAccountDeleted = {
+                navController.navigate(WelcomeRoute) {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
+            onShareJson = { /* handled by platform share sheet — no-op in nav */ },
+        )
     }
     composable<SettingsNotificationsRoute> {
         NotificationPreferencesRoot(onNavigateBack = { navController.popBackStack() })

@@ -12,6 +12,7 @@ import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.exceptions.RestException
+import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.buildJsonObject
@@ -137,6 +138,48 @@ class SupabaseAuthRepository(private val client: SupabaseClient) : AuthRepositor
             Result.Success(authSession)
         } catch (e: Exception) {
             AppLogger.e(TAG, "getSession failed: ${e.message}")
+            Result.Error(AuthError.UNKNOWN)
+        }
+    }
+
+    override suspend fun updateEmail(newEmail: String): EmptyResult<AuthError> {
+        AppLogger.d(TAG, "updateEmail enter")
+        return try {
+            client.auth.updateUser { email = newEmail }
+            AppLogger.i(TAG, "updateEmail success — confirmation sent to $newEmail")
+            Result.Success(Unit)
+        } catch (e: RestException) {
+            AppLogger.e(TAG, "updateEmail failed: ${e.message}")
+            Result.Error(e.toAuthError())
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "updateEmail unexpected: ${e.message}")
+            Result.Error(AuthError.UNKNOWN)
+        }
+    }
+
+    override suspend fun updatePassword(newPassword: String): EmptyResult<AuthError> {
+        AppLogger.d(TAG, "updatePassword enter")
+        return try {
+            client.auth.updateUser { password = newPassword }
+            AppLogger.i(TAG, "updatePassword success")
+            Result.Success(Unit)
+        } catch (e: RestException) {
+            AppLogger.e(TAG, "updatePassword failed: ${e.message}")
+            Result.Error(e.toAuthError())
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "updatePassword unexpected: ${e.message}")
+            Result.Error(AuthError.UNKNOWN)
+        }
+    }
+
+    override suspend fun deleteAccount(): EmptyResult<AuthError> {
+        AppLogger.d(TAG, "deleteAccount enter")
+        return try {
+            client.functions.invoke("delete_account")
+            AppLogger.i(TAG, "deleteAccount success")
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "deleteAccount failed: ${e.message}")
             Result.Error(AuthError.UNKNOWN)
         }
     }

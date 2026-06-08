@@ -29,4 +29,8 @@ class FakeAuthRepository : AuthRepository {
 
     override suspend fun getSession(): Result<AuthSession?, AuthError> =
         Result.Success(null)
+
+    override suspend fun updateEmail(newEmail: String): EmptyResult<AuthError> = Result.Success(Unit)
+    override suspend fun updatePassword(newPassword: String): EmptyResult<AuthError> = Result.Success(Unit)
+    override suspend fun deleteAccount(): EmptyResult<AuthError> = Result.Success(Unit)
 }

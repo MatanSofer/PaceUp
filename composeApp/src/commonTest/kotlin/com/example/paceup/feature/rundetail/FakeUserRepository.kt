@@ -2,6 +2,7 @@ package com.example.paceup.feature.rundetail
 
 import com.example.paceup.shared.network.error.AppError
 import com.example.paceup.shared.network.error.RunError
+import com.example.paceup.shared.network.result.EmptyResult
 import com.example.paceup.shared.network.result.Result
 import com.example.paceup.shared.runmatching.domain.UserProfile
 import com.example.paceup.shared.runmatching.domain.UserRepository
@@ -23,4 +24,14 @@ class FakeUserRepository : UserRepository {
 
     override suspend fun getUserSummary(userId: String): Result<UserSummary?, AppError> =
         Result.Success(null)
+
+    override suspend fun getCurrentProfile(): Result<UserProfile, AppError> =
+        userProfileResult
+
+    override suspend fun updateProfile(displayName: String, bio: String?): EmptyResult<AppError> =
+        Result.Success(Unit)
+
+    override suspend fun disconnectStrava(): EmptyResult<AppError> = Result.Success(Unit)
+    override suspend fun disconnectGarmin(): EmptyResult<AppError> = Result.Success(Unit)
+    override suspend fun exportUserData(): Result<String, AppError> = Result.Success("{}")
 }

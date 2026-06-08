@@ -30,4 +30,8 @@ class FakeAuthRepositoryForDetail : AuthRepository {
         Result.Error(AuthError.OAUTH_FAILED)
 
     override suspend fun signOut(): EmptyResult<AuthError> = Result.Success(Unit)
+
+    override suspend fun updateEmail(newEmail: String): EmptyResult<AuthError> = Result.Success(Unit)
+    override suspend fun updatePassword(newPassword: String): EmptyResult<AuthError> = Result.Success(Unit)
+    override suspend fun deleteAccount(): EmptyResult<AuthError> = Result.Success(Unit)
 }
