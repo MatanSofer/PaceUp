@@ -17,6 +17,7 @@ import com.example.paceup.feature.rivaldashboard.RivalDashboardRoot
 import com.example.paceup.feature.settings.AccountSettingsRoot
 import com.example.paceup.feature.settings.BlockedUsersRoot
 import com.example.paceup.feature.settings.NotificationPreferencesRoot
+import com.example.paceup.feature.settings.PrivacySettingsRoot
 import com.example.paceup.feature.settings.SettingsRoot
 import com.example.paceup.feature.runchat.RunChatRoot
 import com.example.paceup.feature.rundetail.RunDetailRoot
@@ -198,7 +199,10 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         NotificationPreferencesRoot(onNavigateBack = { navController.popBackStack() })
     }
     composable<SettingsPrivacyRoute> {
-        StubScreen("Settings — Privacy")
+        PrivacySettingsRoot(
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToBlockedUsers = { navController.navigate(BlockedUsersRoute) },
+        )
     }
     composable<SettingsAppRoute> {
         StubScreen("Settings — App")

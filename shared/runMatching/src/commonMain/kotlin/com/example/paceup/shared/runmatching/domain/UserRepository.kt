@@ -49,4 +49,12 @@ interface UserRepository {
 
     /** Calls fn_export_user_data() RPC and returns the result as a JSON string (GDPR §6.4). */
     suspend fun exportUserData(): Result<String, AppError>
+
+    // ── Privacy settings (spec §5.2 Privacy) ─────────────────────────────────
+
+    /** Returns the current user's privacy settings. */
+    suspend fun getPrivacySettings(): Result<PrivacySettings, AppError>
+
+    /** Persists all privacy settings for the current user in a single update. */
+    suspend fun updatePrivacySettings(settings: PrivacySettings): EmptyResult<AppError>
 }

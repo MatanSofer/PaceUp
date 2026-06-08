@@ -4,6 +4,7 @@ import com.example.paceup.shared.network.error.AppError
 import com.example.paceup.shared.network.error.RunError
 import com.example.paceup.shared.network.logger.AppLogger
 import com.example.paceup.shared.network.result.Result
+import com.example.paceup.shared.runmatching.domain.PrivacySettings
 import com.example.paceup.shared.runmatching.domain.UserProfile
 import com.example.paceup.shared.runmatching.domain.UserRepository
 import com.example.paceup.shared.runmatching.domain.UserSummary
@@ -21,6 +22,23 @@ import kotlinx.serialization.json.put
 
 private const val TAG = "SupabaseUserRepository"
 private const val TABLE = "users"
+
+@Serializable
+private data class PrivacySettingsDto(
+    @SerialName("profile_visibility") val profileVisibility: String = "public",
+    @SerialName("show_pace_zone")     val showPaceZone: Boolean = true,
+    @SerialName("show_run_history")   val showRunHistory: Boolean = true,
+    @SerialName("show_rivals")        val showRivals: Boolean = true,
+    @SerialName("location_precision") val locationPrecision: String = "city",
+) {
+    fun toDomain() = PrivacySettings(
+        profileVisibility = profileVisibility,
+        showPaceZone      = showPaceZone,
+        showRunHistory    = showRunHistory,
+        showRivals        = showRivals,
+        locationPrecision = locationPrecision,
+    )
+}
 
 @Serializable
 private data class ReputationTierDto(
@@ -239,6 +257,52 @@ class SupabaseUserRepository(private val supabase: SupabaseClient) : UserReposit
             },
             onFailure = { e ->
                 AppLogger.e(TAG, "exportUserData failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
+
+    override suspend fun getPrivacySettings(): Result<PrivacySettings, AppError> {
+        AppLogger.d(TAG, "getPrivacySettings")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            supabase.postgrest[TABLE]
+                .select(Columns.raw("profile_visibility, show_pace_zone, show_run_history, show_rivals, location_precision")) {
+                    filter { eq("id", userId) }
+                    limit(1)
+                }
+                .decodeList<PrivacySettingsDto>()
+                .firstOrNull()
+                ?.toDomain()
+                ?: PrivacySettings()
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "getPrivacySettings failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
+
+    override suspend fun updatePrivacySettings(settings: PrivacySettings): EmptyResult<AppError> {
+        AppLogger.d(TAG, "updatePrivacySettings")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            val update = buildJsonObject {
+                put("profile_visibility", settings.profileVisibility)
+                put("show_pace_zone",     settings.showPaceZone)
+                put("show_run_history",   settings.showRunHistory)
+                put("show_rivals",        settings.showRivals)
+                put("location_precision", settings.locationPrecision)
+            }
+            supabase.postgrest[TABLE].update(update) { filter { eq("id", userId) } }
+            AppLogger.i(TAG, "updatePrivacySettings success")
+        }.fold(
+            onSuccess = { Result.Success(Unit) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "updatePrivacySettings failed: ${e.message}")
                 Result.Error(NetworkError.UNKNOWN)
             }
         )

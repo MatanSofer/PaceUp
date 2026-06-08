@@ -1385,7 +1385,12 @@ fun observeRivalRequest(): Flow<Rival>
 
 **Supabase columns to add to users:** profile_visibility, show_pace_zone, show_run_history, show_rivals, location_precision
 
-- [ ] Done
+- [x] Done
+  - Migration: added `profile_visibility`, `show_pace_zone`, `show_run_history`, `show_rivals`, `location_precision` columns to `users` table with CHECK constraints
+  - `PrivacySettings` domain model + `getPrivacySettings`/`updatePrivacySettings` added to `UserRepository` and `SupabaseUserRepository`
+  - `PrivacySettingsViewModel` (MVI) with load + save + navigation to blocked users
+  - `PrivacySettingsScreen` + `PrivacySettingsRoot` with toggles, chip selectors, blocked users row, save button
+  - `SettingsPrivacyRoute` wired in nav graph (→ BlockedUsersRoute for blocked users list); `PrivacySettingsViewModel` registered in Koin
 
 ---
 
