@@ -4,6 +4,7 @@ import com.example.paceup.shared.network.error.AppError
 import com.example.paceup.shared.network.error.RunError
 import com.example.paceup.shared.network.result.EmptyResult
 import com.example.paceup.shared.network.result.Result
+import com.example.paceup.shared.runmatching.domain.AppSettings
 import com.example.paceup.shared.runmatching.domain.PrivacySettings
 import com.example.paceup.shared.runmatching.domain.UserProfile
 import com.example.paceup.shared.runmatching.domain.UserRepository
@@ -40,5 +41,11 @@ class FakeUserRepository : UserRepository {
         Result.Success(PrivacySettings())
 
     override suspend fun updatePrivacySettings(settings: PrivacySettings): EmptyResult<AppError> =
+        Result.Success(Unit)
+
+    override suspend fun getAppSettings(): Result<AppSettings, AppError> =
+        Result.Success(AppSettings())
+
+    override suspend fun updateAppSettings(settings: AppSettings): EmptyResult<AppError> =
         Result.Success(Unit)
 }

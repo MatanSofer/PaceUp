@@ -65,7 +65,7 @@ fun App(appVersion: String, onOpenAppStore: () -> Unit) {
                 }
 
                 NavHost(navController = navController, startDestination = WelcomeRoute) {
-                    appGraph(navController)
+                    appGraph(navController, appVersion)
                 }
             }
 

@@ -15,6 +15,7 @@ import com.example.paceup.feature.home.HomeRoot
 import com.example.paceup.feature.partnerrating.PartnerRatingRoot
 import com.example.paceup.feature.rivaldashboard.RivalDashboardRoot
 import com.example.paceup.feature.settings.AccountSettingsRoot
+import com.example.paceup.feature.settings.AppSettingsRoot
 import com.example.paceup.feature.settings.BlockedUsersRoot
 import com.example.paceup.feature.settings.NotificationPreferencesRoot
 import com.example.paceup.feature.settings.PrivacySettingsRoot
@@ -33,7 +34,7 @@ import com.example.paceup.feature.stravaconnect.StravaConnectRoot
 import com.example.paceup.feature.welcome.WelcomeRoot
 
 /** Registers all PaceUp destinations. Stub screens replaced per feature task. */
-fun NavGraphBuilder.appGraph(navController: NavController) {
+fun NavGraphBuilder.appGraph(navController: NavController, appVersion: String = "") {
     composable<WelcomeRoute> {
         WelcomeRoot(onNavigateToLogin = { navController.navigate(LoginRoute) })
     }
@@ -205,7 +206,10 @@ fun NavGraphBuilder.appGraph(navController: NavController) {
         )
     }
     composable<SettingsAppRoute> {
-        StubScreen("Settings — App")
+        AppSettingsRoot(
+            appVersion = appVersion,
+            onNavigateBack = { navController.popBackStack() },
+        )
     }
     composable<BlockedUsersRoute> {
         BlockedUsersRoot(onNavigateBack = { navController.popBackStack() })

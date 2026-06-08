@@ -1402,7 +1402,13 @@ fun observeRivalRequest(): Flow<Rival>
 - **Dependencies:** Task 10.1
 - **Deliverable:** Language switch triggers RTL/LTR change. Units update across the app. Map style applies. Tapping app version copies it to clipboard.
 
-- [ ] Done
+- [x] Done
+  - Migration: added `preferred_map_style TEXT NOT NULL DEFAULT 'standard'` to `users` table with CHECK constraint
+  - `AppSettings` domain model + `getAppSettings`/`updateAppSettings` added to `UserRepository` and `SupabaseUserRepository`
+  - `AppSettingsViewModel` (MVI, parametric `appVersion: String`) handles load, save, copy-version event
+  - `AppSettingsScreen` + `AppSettingsRoot` with language, units, map style chip selectors and app version row (tap to copy via `LocalClipboardManager`)
+  - `SettingsAppRoute` wired in nav graph with `appVersion` passed via `appGraph()` parameter; `AppSettingsViewModel` registered in Koin
+  - `App.kt` updated to forward `appVersion` to `appGraph()`
 
 ---
 

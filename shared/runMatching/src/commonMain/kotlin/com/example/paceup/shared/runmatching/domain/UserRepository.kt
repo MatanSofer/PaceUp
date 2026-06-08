@@ -57,4 +57,12 @@ interface UserRepository {
 
     /** Persists all privacy settings for the current user in a single update. */
     suspend fun updatePrivacySettings(settings: PrivacySettings): EmptyResult<AppError>
+
+    // ── App settings (spec §5.2 App) ──────────────────────────────────────────
+
+    /** Returns the current user's language, unit, and map style preferences. */
+    suspend fun getAppSettings(): Result<AppSettings, AppError>
+
+    /** Persists language, unit, and map style preferences for the current user. */
+    suspend fun updateAppSettings(settings: AppSettings): EmptyResult<AppError>
 }

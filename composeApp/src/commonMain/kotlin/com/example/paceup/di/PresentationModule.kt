@@ -9,6 +9,7 @@ import com.example.paceup.feature.home.RunListViewModel
 import com.example.paceup.feature.partnerrating.PartnerRatingViewModel
 import com.example.paceup.feature.rivaldashboard.RivalDashboardViewModel
 import com.example.paceup.feature.settings.AccountSettingsViewModel
+import com.example.paceup.feature.settings.AppSettingsViewModel
 import com.example.paceup.feature.settings.BlockedUsersViewModel
 import com.example.paceup.feature.settings.NotificationPreferencesViewModel
 import com.example.paceup.feature.settings.PrivacySettingsViewModel
@@ -52,6 +53,7 @@ val presentationModule: Module = module {
     viewModelOf(::SettingsViewModel)
     viewModelOf(::AccountSettingsViewModel) // UserRepository + AuthRepository injected automatically
     viewModelOf(::PrivacySettingsViewModel) // UserRepository injected automatically
+    viewModel { (appVersion: String) -> AppSettingsViewModel(get(), appVersion) }
     single<AppVersionRepository> { SupabaseAppVersionRepository(get()) }
     viewModel { (appVersion: String) -> AppVersionViewModel(get(), appVersion) }
 }

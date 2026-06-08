@@ -4,6 +4,7 @@ import com.example.paceup.shared.network.error.AppError
 import com.example.paceup.shared.network.error.RunError
 import com.example.paceup.shared.network.logger.AppLogger
 import com.example.paceup.shared.network.result.Result
+import com.example.paceup.shared.runmatching.domain.AppSettings
 import com.example.paceup.shared.runmatching.domain.PrivacySettings
 import com.example.paceup.shared.runmatching.domain.UserProfile
 import com.example.paceup.shared.runmatching.domain.UserRepository
@@ -22,6 +23,15 @@ import kotlinx.serialization.json.put
 
 private const val TAG = "SupabaseUserRepository"
 private const val TABLE = "users"
+
+@Serializable
+private data class AppSettingsDto(
+    @SerialName("preferred_language")  val language: String = "en",
+    @SerialName("preferred_units")     val units: String = "km",
+    @SerialName("preferred_map_style") val mapStyle: String = "standard",
+) {
+    fun toDomain() = AppSettings(language = language, units = units, mapStyle = mapStyle)
+}
 
 @Serializable
 private data class PrivacySettingsDto(
@@ -303,6 +313,50 @@ class SupabaseUserRepository(private val supabase: SupabaseClient) : UserReposit
             onSuccess = { Result.Success(Unit) },
             onFailure = { e ->
                 AppLogger.e(TAG, "updatePrivacySettings failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
+
+    override suspend fun getAppSettings(): Result<AppSettings, AppError> {
+        AppLogger.d(TAG, "getAppSettings")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            supabase.postgrest[TABLE]
+                .select(Columns.raw("preferred_language, preferred_units, preferred_map_style")) {
+                    filter { eq("id", userId) }
+                    limit(1)
+                }
+                .decodeList<AppSettingsDto>()
+                .firstOrNull()
+                ?.toDomain()
+                ?: AppSettings()
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "getAppSettings failed: ${e.message}")
+                Result.Error(NetworkError.UNKNOWN)
+            }
+        )
+    }
+
+    override suspend fun updateAppSettings(settings: AppSettings): EmptyResult<AppError> {
+        AppLogger.d(TAG, "updateAppSettings")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: return Result.Error(NetworkError.UNAUTHORIZED)
+        return runCatching {
+            val update = buildJsonObject {
+                put("preferred_language",  settings.language)
+                put("preferred_units",     settings.units)
+                put("preferred_map_style", settings.mapStyle)
+            }
+            supabase.postgrest[TABLE].update(update) { filter { eq("id", userId) } }
+            AppLogger.i(TAG, "updateAppSettings success")
+        }.fold(
+            onSuccess = { Result.Success(Unit) },
+            onFailure = { e ->
+                AppLogger.e(TAG, "updateAppSettings failed: ${e.message}")
                 Result.Error(NetworkError.UNKNOWN)
             }
         )
